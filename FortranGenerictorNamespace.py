@@ -1,41 +1,51 @@
 from assertions import assertType, assertTypeAll
 
 class FortranType(object):
-    def __init__(self, fullname, shortname, actualDatatype, dimensions):
+    def __init__(self, fullname, shortname, actualDatatype, ranks):
         self.fullname = fullname
         self.shortname = shortname
         self.datatype = actualDatatype
-        self.dimensions = []
-        for rank in dimensions:
-            self.dimensions.append(FortranDimension(rank))
+        self.ranks = ranks
 
 class FortranDimension(object):
     def __init__(self, rank):
         assertType(rank, 'rank', int)
         self.rank = rank
+        
+class FortranTypeWithDimension(object):
+    def __init__(self, fortranType, rank):
+        self.__type = fortranType
+        self.__dimension = fortranType.dimensions[rank]
 
 class TemplatesNameSpace(object):
     
     def __init__(self):
         self.__types = []
-        self.__defaultDimensions = [0]
+        self.__defaultRanks = [0]
         
-    def setDefaultDimensions(self, dimensions):
-        assertType(dimensions, 'dimensions', list)
-        assertTypeAll(dimensions, 'dimensions', int)
+    def setDefaultRanks(self, ranks):
+        assertType(ranks, 'ranks', list)
+        assertTypeAll(ranks, 'ranks', int)
         
-        self.__defaultDimensions = dimensions
+        self.__defaultRanks = ranks
     
-    def addType(self, fullname, shortname, actualDatatype, dimensions = None):
+    def addType(self, fullname, shortname, actualDatatype, ranks = None):
         assertType(fullname, 'fullname', str)
         assertType(shortname, 'shortname', str)
         assertType(actualDatatype, 'actualDatatype', str)
-        assertType(dimensions, 'dimensions', list, True)
-        assertTypeAll(dimensions, 'dimensions', int, True)
+        assertType(ranks, 'ranks', list, True)
+        assertTypeAll(ranks, 'ranks', int, True)
         
-        if dimensions is None:
-            dimensions = self.__defaultDimensions
-        self.__types.append(FortranType(fullname, shortname, actualDatatype, dimensions))
+        if ranks is None:
+            ranks = self.__defaultRanks
+        self.__types.append(FortranType(fullname, shortname, actualDatatype, ranks))
     
     def types(self):
         return self.__types
+
+    def typesWithDimension(self):
+        twds = []
+        for fortranType in self.types():
+            for rank in fortranType.ranks:
+                twds.append(FortranTypeWithDimension(fortranType, rank))
+        return twds
