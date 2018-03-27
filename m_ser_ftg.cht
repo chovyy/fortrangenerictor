@@ -1,0 +1,21 @@
+#silent $setDefaultRanks(range(0,5))
+#silent $addType('logical', 'l', 'LOGICAL')
+#silent $addType('bool', 'b', 'LOGICAL(KIND=C_BOOL)')
+#silent $addType('int', 'i', 'INTEGER')
+#
+#for $t in $typesWithDimensions
+
+SUBROUTINE ftg_read_${t.fullname}_${t.shortname}${t.rank}(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), TARGET :: field${t.dimension}
+  LOGICAL :: registered_only
+
+  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
+    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
+    IF (.NOT. registered_only) THEN
+      CALL fs_read_field(serializer, savepoint, fieldname, field)
+    END IF
+  END IF
+END SUBROUTINE ftg_read_${t.fullname}_${t.shortname}${t.rank}
+#end for
+
