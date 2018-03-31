@@ -571,7 +571,6 @@ SUBROUTINE ftg_write_${t.name}_4d(fieldname, field, lbounds, ubounds)
 END SUBROUTINE ftg_write_${t.name}_4d
 
 #end for
-
 !=============================================================================
 !=============================================================================
 
@@ -590,13 +589,13 @@ SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field)
 END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 
 #end for
-
 !=============================================================================
 !=============================================================================
 
-SUBROUTINE ftg_allocate_pointer_logical_1d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  LOGICAL, INTENT(OUT), POINTER :: field(:)
+#for $t in $types
+SUBROUTINE ftg_allocate_pointer_${t.name}_1d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), POINTER :: field(:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -607,75 +606,11 @@ SUBROUTINE ftg_allocate_pointer_logical_1d(fieldname, field)
     NULLIFY(field)
   END IF
 
-END SUBROUTINE ftg_allocate_pointer_logical_1d
+END SUBROUTINE ftg_allocate_pointer_${t.name}_1d
 
-SUBROUTINE ftg_allocate_pointer_logical_2d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  LOGICAL, INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_logical_2d
-
-SUBROUTINE ftg_allocate_pointer_logical_3d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  LOGICAL, INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_logical_3d
-
-
-SUBROUTINE ftg_allocate_pointer_logical_4d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  LOGICAL, INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_logical_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_pointer_bool_1d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_bool_1d
-
-SUBROUTINE ftg_allocate_pointer_bool_2d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), POINTER :: field(:,:)
+SUBROUTINE ftg_allocate_pointer_${t.name}_2d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -686,74 +621,11 @@ SUBROUTINE ftg_allocate_pointer_bool_2d(fieldname, field)
     NULLIFY(field)
   END IF
 
-END SUBROUTINE ftg_allocate_pointer_bool_2d
+END SUBROUTINE ftg_allocate_pointer_${t.name}_2d
 
-SUBROUTINE ftg_allocate_pointer_bool_3d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_bool_3d
-
-SUBROUTINE ftg_allocate_pointer_bool_4d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_bool_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_pointer_int_1d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  INTEGER, INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_int_1d
-
-SUBROUTINE ftg_allocate_pointer_int_2d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  INTEGER, INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_int_2d
-
-SUBROUTINE ftg_allocate_pointer_int_3d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  INTEGER, INTENT(OUT), POINTER :: field(:,:,:)
+SUBROUTINE ftg_allocate_pointer_${t.name}_3d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -764,75 +636,12 @@ SUBROUTINE ftg_allocate_pointer_int_3d(fieldname, field)
     NULLIFY(field)
   END IF
 
-END SUBROUTINE ftg_allocate_pointer_int_3d
+END SUBROUTINE ftg_allocate_pointer_${t.name}_3d
 
 
-SUBROUTINE ftg_allocate_pointer_int_4d(fieldname, field)
-  CHARACTER(LEN=*)              :: fieldname
-  INTEGER, INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_int_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_pointer_long_1d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_long_1d
-
-SUBROUTINE ftg_allocate_pointer_long_2d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_long_2d
-
-SUBROUTINE ftg_allocate_pointer_long_3d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_long_3d
-
-SUBROUTINE ftg_allocate_pointer_long_4d(fieldname, field)
-  CHARACTER(LEN=*)                           :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), POINTER :: field(:,:,:,:)
+SUBROUTINE ftg_allocate_pointer_${t.name}_4d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:,:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -843,141 +652,16 @@ SUBROUTINE ftg_allocate_pointer_long_4d(fieldname, field)
     NULLIFY(field)
   END IF
 
-END SUBROUTINE ftg_allocate_pointer_long_4d
+END SUBROUTINE ftg_allocate_pointer_${t.name}_4d
 
+#end for
 !=============================================================================
 !=============================================================================
 
-SUBROUTINE ftg_allocate_pointer_float_1d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_float_1d
-
-SUBROUTINE ftg_allocate_pointer_float_2d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_float_2d
-
-SUBROUTINE ftg_allocate_pointer_float_3d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_float_3d
-
-
-SUBROUTINE ftg_allocate_pointer_float_4d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_float_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_pointer_double_1d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_double_1d
-
-SUBROUTINE ftg_allocate_pointer_double_2d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_double_2d
-
-SUBROUTINE ftg_allocate_pointer_double_3d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_double_3d
-
-SUBROUTINE ftg_allocate_pointer_double_4d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_double_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_logical_1d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:)
+#for $t in $types
+SUBROUTINE ftg_allocate_allocatable_${t.name}_1d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -986,67 +670,11 @@ SUBROUTINE ftg_allocate_allocatable_logical_1d(fieldname, field)
     ALLOCATE(field(bounds(1):bounds(2)))
   END IF
 
-END SUBROUTINE ftg_allocate_allocatable_logical_1d
+END SUBROUTINE ftg_allocate_allocatable_${t.name}_1d
 
-SUBROUTINE ftg_allocate_allocatable_logical_2d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_logical_2d
-
-SUBROUTINE ftg_allocate_allocatable_logical_3d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_logical_3d
-
-
-SUBROUTINE ftg_allocate_allocatable_logical_4d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  LOGICAL, INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_logical_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_bool_1d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_bool_1d
-
-SUBROUTINE ftg_allocate_allocatable_bool_2d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), ALLOCATABLE :: field(:,:)
+SUBROUTINE ftg_allocate_allocatable_${t.name}_2d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -1055,66 +683,11 @@ SUBROUTINE ftg_allocate_allocatable_bool_2d(fieldname, field)
     ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
   END IF
 
-END SUBROUTINE ftg_allocate_allocatable_bool_2d
+END SUBROUTINE ftg_allocate_allocatable_${t.name}_2d
 
-SUBROUTINE ftg_allocate_allocatable_bool_3d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_bool_3d
-
-SUBROUTINE ftg_allocate_allocatable_bool_4d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_bool_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_int_1d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  INTEGER, INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_int_1d
-
-SUBROUTINE ftg_allocate_allocatable_int_2d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  INTEGER, INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_int_2d
-
-SUBROUTINE ftg_allocate_allocatable_int_3d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  INTEGER, INTENT(OUT), ALLOCATABLE :: field(:,:,:)
+SUBROUTINE ftg_allocate_allocatable_${t.name}_3d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -1123,67 +696,11 @@ SUBROUTINE ftg_allocate_allocatable_int_3d(fieldname, field)
     ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
   END IF
 
-END SUBROUTINE ftg_allocate_allocatable_int_3d
+END SUBROUTINE ftg_allocate_allocatable_${t.name}_3d
 
-
-SUBROUTINE ftg_allocate_allocatable_int_4d(fieldname, field)
-  CHARACTER(LEN=*)                  :: fieldname
-  INTEGER, INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_int_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_long_1d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_long_1d
-
-SUBROUTINE ftg_allocate_allocatable_long_2d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_long_2d
-
-SUBROUTINE ftg_allocate_allocatable_long_3d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_long_3d
-
-SUBROUTINE ftg_allocate_allocatable_long_4d(fieldname, field)
-  CHARACTER(LEN=*)                               :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
+SUBROUTINE ftg_allocate_allocatable_${t.name}_4d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
 
   INTEGER, DIMENSION(8) :: bounds
 
@@ -1192,120 +709,7 @@ SUBROUTINE ftg_allocate_allocatable_long_4d(fieldname, field)
     ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
   END IF
 
-END SUBROUTINE ftg_allocate_allocatable_long_4d
+END SUBROUTINE ftg_allocate_allocatable_${t.name}_4d
 
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_float_1d(fieldname, field)
-  CHARACTER(LEN=*)                             :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_float_1d
-
-SUBROUTINE ftg_allocate_allocatable_float_2d(fieldname, field)
-  CHARACTER(LEN=*)                             :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_float_2d
-
-SUBROUTINE ftg_allocate_allocatable_float_3d(fieldname, field)
-  CHARACTER(LEN=*)                             :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_float_3d
-
-
-SUBROUTINE ftg_allocate_allocatable_float_4d(fieldname, field)
-  CHARACTER(LEN=*)                             :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_float_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_allocate_allocatable_double_1d(fieldname, field)
-  CHARACTER(LEN=*)                              :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_double_1d
-
-SUBROUTINE ftg_allocate_allocatable_double_2d(fieldname, field)
-  CHARACTER(LEN=*)                              :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_double_2d
-
-SUBROUTINE ftg_allocate_allocatable_double_3d(fieldname, field)
-  CHARACTER(LEN=*)                              :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_double_3d
-
-SUBROUTINE ftg_allocate_allocatable_double_4d(fieldname, field)
-  CHARACTER(LEN=*)                              :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_double_4d
-
-!=============================================================================
-!=============================================================================
-
+#end for
 END MODULE m_ser_ftg
