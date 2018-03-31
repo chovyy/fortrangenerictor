@@ -86,25 +86,25 @@ END INTERFACE
 
 INTERFACE ftg_write
     MODULE PROCEDURE &
-#for $t in $typesWithDimensions  
-      ftg_write_${t.name}_${t.rank}d${t.unlessIsLast(', &')}
+#for $td in $typesWithDimensions  
+      ftg_write_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
 #end for  
 END INTERFACE
 
 INTERFACE ftg_read
     MODULE PROCEDURE &
-#for $t in $typesWithDimensions  
-      ftg_read_${t.name}_${t.rank}d${t.unlessIsLast(', &')}
+#for $td in $typesWithDimensions  
+      ftg_read_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
 #end for  
 END INTERFACE
 
 INTERFACE ftg_allocate
     MODULE PROCEDURE &
-#for $t in $typesWithDimensions  
-      ftg_allocate_pointer_${t.name}_${t.rank}d${t.unlessIsLast(', &')}
+#for $td in $typesWithDimensions(excludeRanks = [0])  
+      ftg_allocate_pointer_${td.name}_${td.rank}d, &
 #end for      
-#for $t in $typesWithDimensions  
-      ftg_allocate_allocatable_${t.name}_${t.rank}d${t.unlessIsLast(', &')}
+#for $td in $typesWithDimensions(excludeRanks = [0])
+      ftg_allocate_allocatable_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
 #end for      
 END INTERFACE ftg_allocate
 
@@ -417,13 +417,18 @@ END FUNCTION ftg_loc_hex
 !=============================================================================
 !=============================================================================
 
-
-SUBROUTINE ftg_write_logical_0d(fieldname, field)
+#for $t in $types
+#if $t.name == 'logical'
+#set $sbname = 'bool'
+#else 
+#set $sbname = $t.name
+#end if
+SUBROUTINE ftg_write_${t.name}_0d(fieldname, field)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  LOGICAL, INTENT(IN), TARGET  :: field
+  ${t.datatype}, INTENT(IN), TARGET  :: field
 
-  LOGICAL, POINTER :: padd
-  LOGICAL          :: bullshit
+  ${t.datatype}, POINTER :: padd
+  LOGICAL :: bullshit
 
   padd => field
   bullshit = .FALSE.
@@ -437,15 +442,15 @@ SUBROUTINE ftg_write_logical_0d(fieldname, field)
     CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
   END IF
 
-END SUBROUTINE ftg_write_logical_0d
+END SUBROUTINE ftg_write_${t.name}_0d
 
-SUBROUTINE ftg_write_logical_1d(fieldname, field, lbounds, ubounds)
+SUBROUTINE ftg_write_${t.name}_1d(fieldname, field, lbounds, ubounds)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  LOGICAL, INTENT(IN), TARGET  :: field(:)
-  INTEGER, INTENT(IN)          :: lbounds(1), ubounds(1)
+  ${t.datatype}, INTENT(IN), TARGET  :: field(:)
+  INTEGER, INTENT(IN) :: lbounds(1), ubounds(1)
 
-  LOGICAL, POINTER :: padd(:)
-  LOGICAL          :: bullshit
+  ${t.datatype}, POINTER :: padd(:)
+  LOGICAL :: bullshit
 
   padd=>field
   bullshit = .FALSE.
@@ -461,20 +466,20 @@ SUBROUTINE ftg_write_logical_1d(fieldname, field, lbounds, ubounds)
       CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
       CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
     ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+      CALL ftg_register_only_internal(fieldname, '${sbname}', fs_${sbname}size(), lbounds, ubounds)
     END IF
     CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
   END IF
 
-END SUBROUTINE ftg_write_logical_1d
+END SUBROUTINE ftg_write_${t.name}_1d
 
-SUBROUTINE ftg_write_logical_2d(fieldname, field, lbounds, ubounds)
+SUBROUTINE ftg_write_${t.name}_2d(fieldname, field, lbounds, ubounds)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  LOGICAL, INTENT(IN), TARGET  :: field(:,:)
-  INTEGER, INTENT(IN)          :: lbounds(2), ubounds(2)
+  ${t.datatype}, INTENT(IN), TARGET  :: field(:,:)
+  INTEGER, INTENT(IN) :: lbounds(2), ubounds(2)
 
-  LOGICAL, POINTER :: padd(:,:)
-  LOGICAL          :: bullshit
+  ${t.datatype}, POINTER :: padd(:,:)
+  LOGICAL :: bullshit
 
   padd=>field
   bullshit = .FALSE.
@@ -492,21 +497,21 @@ SUBROUTINE ftg_write_logical_2d(fieldname, field, lbounds, ubounds)
       CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
       CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
     ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+      CALL ftg_register_only_internal(fieldname, '${sbname}', fs_${sbname}size(), lbounds, ubounds)
     END IF
     CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
   END IF
 
-END SUBROUTINE ftg_write_logical_2d
+END SUBROUTINE ftg_write_${t.name}_2d
 
-SUBROUTINE ftg_write_logical_3d(fieldname, field, lbounds, ubounds)
+SUBROUTINE ftg_write_${t.name}_3d(fieldname, field, lbounds, ubounds)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  LOGICAL, INTENT(IN), TARGET  :: field(:,:,:)
-  INTEGER, INTENT(IN)          :: lbounds(3), ubounds(3)
+  ${t.datatype}, INTENT(IN), TARGET  :: field(:,:,:)
+  INTEGER, INTENT(IN) :: lbounds(3), ubounds(3)
 
-  LOGICAL, POINTER :: padd(:,:,:)
-  LOGICAL          :: bullshit
-  CHARACTER(16)    :: loc
+  ${t.datatype}, POINTER :: padd(:,:,:)
+  LOGICAL :: bullshit
+  CHARACTER(16) :: loc
 
   padd=>field
   bullshit = .FALSE.
@@ -525,20 +530,20 @@ SUBROUTINE ftg_write_logical_3d(fieldname, field, lbounds, ubounds)
       CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
       CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
     ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+      CALL ftg_register_only_internal(fieldname, '${sbname}', fs_${sbname}size(), lbounds, ubounds)
     END IF
     CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
   END IF
 
-END SUBROUTINE ftg_write_logical_3d
+END SUBROUTINE ftg_write_${t.name}_3d
 
-SUBROUTINE ftg_write_logical_4d(fieldname, field, lbounds, ubounds)
+SUBROUTINE ftg_write_${t.name}_4d(fieldname, field, lbounds, ubounds)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  LOGICAL, INTENT(IN), TARGET  :: field(:,:,:,:)
-  INTEGER, INTENT(IN)          :: lbounds(4), ubounds(4)
+  ${t.datatype}, INTENT(IN), TARGET  :: field(:,:,:,:)
+  INTEGER, INTENT(IN) :: lbounds(4), ubounds(4)
 
-  LOGICAL, POINTER :: padd(:,:,:,:)
-  LOGICAL          :: bullshit
+  ${t.datatype}, POINTER :: padd(:,:,:,:)
+  LOGICAL :: bullshit
 
   padd=>field
   bullshit = .FALSE.
@@ -558,764 +563,22 @@ SUBROUTINE ftg_write_logical_4d(fieldname, field, lbounds, ubounds)
       CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
       CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
     ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
+      CALL ftg_register_only_internal(fieldname, '${sbname}', fs_${sbname}size(), lbounds, ubounds)
     END IF
     CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
   END IF
 
-END SUBROUTINE ftg_write_logical_4d
+END SUBROUTINE ftg_write_${t.name}_4d
+
+#end for
 
 !=============================================================================
 !=============================================================================
 
-SUBROUTINE ftg_write_bool_0d(fieldname, field)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(IN), TARGET :: field
-
-  LOGICAL(KIND=C_BOOL), POINTER :: padd
-  LOGICAL                       :: bullshit
-
-  padd => field
-  bullshit = .FALSE.
-  IF (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd)
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_bool_0d
-
-SUBROUTINE ftg_write_bool_1d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(IN), TARGET :: field(:)
-  INTEGER, INTENT(IN)                      :: lbounds(1), ubounds(1)
-
-  LOGICAL(KIND=C_BOOL), POINTER :: padd(:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_bool_1d
-
-SUBROUTINE ftg_write_bool_2d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(IN), TARGET :: field(:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(2), ubounds(2)
-
-  LOGICAL(KIND=C_BOOL), POINTER :: padd(:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_bool_2d
-
-SUBROUTINE ftg_write_bool_3d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(IN), TARGET :: field(:,:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(3), ubounds(3)
-
-  LOGICAL(KIND=C_BOOL), POINTER :: padd(:,:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_bool_3d
-
-SUBROUTINE ftg_write_bool_4d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(IN), TARGET :: field(:,:,:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(4), ubounds(4)
-
-  LOGICAL(KIND=C_BOOL), POINTER :: padd(:,:,:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 4) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'bool', fs_boolsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_bool_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_write_int_0d(fieldname, field)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  INTEGER, INTENT(IN), TARGET  :: field
-
-  INTEGER, POINTER :: padd
-  LOGICAL          :: bullshit
-
-  padd => field
-  bullshit = .FALSE.
-  IF (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd)
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_int_0d
-
-SUBROUTINE ftg_write_int_1d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  INTEGER, INTENT(IN), TARGET  :: field(:)
-  INTEGER, INTENT(IN)          :: lbounds(1), ubounds(1)
-
-  INTEGER, POINTER :: padd(:)
-  LOGICAL          :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'int', fs_intsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_int_1d
-
-SUBROUTINE ftg_write_int_2d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  INTEGER, INTENT(IN), TARGET  :: field(:,:)
-  INTEGER, INTENT(IN)          :: lbounds(2), ubounds(2)
-
-  INTEGER, POINTER :: padd(:,:)
-  LOGICAL          :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'int', fs_intsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_int_2d
-
-SUBROUTINE ftg_write_int_3d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  INTEGER, INTENT(IN), TARGET  :: field(:,:,:)
-  INTEGER, INTENT(IN)          :: lbounds(3), ubounds(3)
-
-  INTEGER, POINTER :: padd(:,:,:)
-  LOGICAL          :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'int', fs_intsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_int_3d
-
-SUBROUTINE ftg_write_int_4d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  INTEGER, INTENT(IN), TARGET  :: field(:,:,:,:)
-  INTEGER, INTENT(IN)          :: lbounds(4), ubounds(4)
-
-  INTEGER, POINTER :: padd(:,:,:,:)
-  LOGICAL          :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 4) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'int', fs_intsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_int_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_write_long_0d(fieldname, field)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(IN), TARGET :: field
-
-  INTEGER(KIND=C_LONG), POINTER :: padd
-  LOGICAL                       :: bullshit
-
-  padd => field
-  bullshit = .FALSE.
-  IF (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd)
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_long_0d
-
-SUBROUTINE ftg_write_long_1d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(IN), TARGET :: field(:)
-  INTEGER, INTENT(IN)                      :: lbounds(1), ubounds(1)
-
-  INTEGER(KIND=C_LONG), POINTER :: padd(:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'long', fs_longsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_long_1d
-
-SUBROUTINE ftg_write_long_2d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(IN), TARGET :: field(:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(2), ubounds(2)
-
-  INTEGER(KIND=C_LONG), POINTER :: padd(:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'long', fs_longsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_long_2d
-
-SUBROUTINE ftg_write_long_3d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(IN), TARGET :: field(:,:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(3), ubounds(3)
-
-  INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'long', fs_longsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_long_3d
-
-SUBROUTINE ftg_write_long_4d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)             :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(IN), TARGET :: field(:,:,:,:)
-  INTEGER, INTENT(IN)                      :: lbounds(4), ubounds(4)
-
-  INTEGER(KIND=C_LONG), POINTER :: padd(:,:,:,:)
-  LOGICAL                       :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 4) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'long', fs_longsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_long_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_write_float_0d(fieldname, field)
-  CHARACTER(LEN=*), INTENT(IN)           :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(IN), TARGET :: field
-
-  REAL(KIND=C_FLOAT), POINTER :: padd
-  LOGICAL                     :: bullshit
-
-  padd => field
-  bullshit = .FALSE.
-  IF (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd)
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-  END IF
-
-END SUBROUTINE ftg_write_float_0d
-
-SUBROUTINE ftg_write_float_1d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)           :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(IN), TARGET :: field(:)
-  INTEGER, INTENT(IN)                    :: lbounds(1), ubounds(1)
-
-  REAL(KIND=C_FLOAT), POINTER :: padd(:)
-  LOGICAL                     :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'float', fs_floatsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_float_1d
-
-SUBROUTINE ftg_write_float_2d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)           :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(IN), TARGET :: field(:,:)
-  INTEGER, INTENT(IN)                    :: lbounds(2), ubounds(2)
-
-  REAL(KIND=C_FLOAT), POINTER :: padd(:,:)
-  LOGICAL                     :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'float', fs_floatsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_float_2d
-
-SUBROUTINE ftg_write_float_3d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)           :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(IN), TARGET :: field(:,:,:)
-  INTEGER, INTENT(IN)                    :: lbounds(3), ubounds(3)
-
-  REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:)
-  LOGICAL                     :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'float', fs_floatsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_float_3d
-
-SUBROUTINE ftg_write_float_4d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)           :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(IN), TARGET :: field(:,:,:,:)
-  INTEGER, INTENT(IN)                    :: lbounds(4), ubounds(4)
-
-  REAL(KIND=C_FLOAT), POINTER :: padd(:,:,:,:)
-  LOGICAL                     :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 4) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'float', fs_floatsize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_float_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_write_double_0d(fieldname, field)
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(IN), TARGET :: field
-
-  REAL(KIND=C_DOUBLE), POINTER :: padd
-  LOGICAL                      :: bullshit
-
-  padd => field
-  bullshit = .FALSE.
-  IF (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd)
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_double_0d
-
-SUBROUTINE ftg_write_double_1d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(IN), TARGET :: field(:)
-  INTEGER, DIMENSION(1), INTENT(IN)       :: lbounds, ubounds
-
-  REAL(KIND=C_DOUBLE), POINTER :: padd(:)
-  LOGICAL                      :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. SIZE(field, 1) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = lbounds(1) < 0 .OR. ubounds(1) < 0
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'double', fs_doublesize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_double_1d
-
-SUBROUTINE ftg_write_double_2d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(IN), TARGET :: field(:,:)
-  INTEGER, DIMENSION(2), INTENT(IN)       :: lbounds, ubounds
-
-  REAL(KIND=C_DOUBLE), POINTER :: padd(:,:)
-  LOGICAL                      :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'double', fs_doublesize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_double_2d
-
-SUBROUTINE ftg_write_double_3d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(IN), TARGET :: field(:,:,:)
-  INTEGER, DIMENSION(3), INTENT(IN)       :: lbounds, ubounds
-
-  REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:)
-  LOGICAL                      :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'double', fs_doublesize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_double_3d
-
-SUBROUTINE ftg_write_double_4d(fieldname, field, lbounds, ubounds)
-  CHARACTER(LEN=*), INTENT(IN)            :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(IN), TARGET :: field(:,:,:,:)
-  INTEGER, DIMENSION(4), INTENT(IN)       :: lbounds, ubounds
-
-  REAL(KIND=C_DOUBLE), POINTER :: padd(:,:,:,:)
-  LOGICAL                      :: bullshit
-
-  padd=>field
-  bullshit = .FALSE.
-  if (ignore_bullshit) THEN
-    bullshit = .NOT. ASSOCIATED(padd) .OR. &
-               SIZE(field, 1) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 2) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 3) > ignore_bullshit_max_dim_size .OR. &
-               SIZE(field, 4) > ignore_bullshit_max_dim_size
-    IF (.NOT. bullshit .AND. .NOT. ignore_bullshit_allow_negative_indices) THEN
-      bullshit = ANY(lbounds < 0) .OR. ANY(ubounds < 0)
-    END IF
-  END IF
-
-  IF (.NOT. bullshit) THEN
-    IF (SIZE(field) > 0) THEN
-      CALL fs_write_field(ftg_get_serializer(), ftg_get_savepoint(), fieldname, field, lbounds, ubounds)
-      CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:registered_only', .FALSE.)
-    ELSE
-      CALL ftg_register_only_internal(fieldname, 'double', fs_doublesize(), lbounds, ubounds)
-    END IF
-    CALL fs_add_field_metainfo(serializer, TRIM(fieldname), 'ftg:loc', TRIM(ADJUSTL(ftg_loc_hex(C_LOC(field)))))
-  END IF
-
-END SUBROUTINE ftg_write_double_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_logical_0d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  LOGICAL, INTENT(OUT), TARGET :: field
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${td.datatype}, INTENT(OUT), TARGET :: field${td.dimension}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -1324,399 +587,9 @@ SUBROUTINE ftg_read_logical_0d(fieldname, field)
       CALL fs_read_field(serializer, savepoint, fieldname, field)
     END IF
   END IF
-END SUBROUTINE ftg_read_logical_0d
+END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 
-SUBROUTINE ftg_read_logical_1d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  LOGICAL, INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_logical_1d
-
-SUBROUTINE ftg_read_logical_2d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  LOGICAL, INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_logical_2d
-
-SUBROUTINE ftg_read_logical_3d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  LOGICAL, INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_logical_3d
-
-SUBROUTINE ftg_read_logical_4d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  LOGICAL, INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_logical_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_bool_0d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), TARGET :: field
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_bool_0d
-
-SUBROUTINE ftg_read_bool_1d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_bool_1d
-
-SUBROUTINE ftg_read_bool_2d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_bool_2d
-
-SUBROUTINE ftg_read_bool_3d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_bool_3d
-
-SUBROUTINE ftg_read_bool_4d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  LOGICAL(KIND=C_BOOL), INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_bool_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_int_0d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  INTEGER, INTENT(OUT), TARGET :: field
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_int_0d
-
-SUBROUTINE ftg_read_int_1d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  INTEGER, INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_int_1d
-
-SUBROUTINE ftg_read_int_2d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  INTEGER, INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_int_2d
-
-SUBROUTINE ftg_read_int_3d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  INTEGER, INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_int_3d
-
-SUBROUTINE ftg_read_int_4d(fieldname, field)
-  CHARACTER(LEN=*)             :: fieldname
-  INTEGER, INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_int_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_long_0d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), TARGET :: field
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_long_0d
-
-SUBROUTINE ftg_read_long_1d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_long_1d
-
-SUBROUTINE ftg_read_long_2d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_long_2d
-
-SUBROUTINE ftg_read_long_3d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_long_3d
-
-SUBROUTINE ftg_read_long_4d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  INTEGER(KIND=C_LONG), INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_long_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_float_0d(fieldname, field)
-  CHARACTER(LEN=*)                        :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), TARGET :: field
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_float_0d
-
-SUBROUTINE ftg_read_float_1d(fieldname, field)
-  CHARACTER(LEN=*)                        :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_float_1d
-
-SUBROUTINE ftg_read_float_2d(fieldname, field)
-  CHARACTER(LEN=*)                        :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_float_2d
-
-SUBROUTINE ftg_read_float_3d(fieldname, field)
-  CHARACTER(LEN=*)                        :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_float_3d
-
-SUBROUTINE ftg_read_float_4d(fieldname, field)
-  CHARACTER(LEN=*)                        :: fieldname
-  REAL(KIND=C_FLOAT), INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_float_4d
-
-!=============================================================================
-!=============================================================================
-
-SUBROUTINE ftg_read_double_0d(fieldname, field)
-  CHARACTER(LEN=*)                          :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), TARGET :: field
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_double_0d
-
-SUBROUTINE ftg_read_double_1d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), TARGET :: field(:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_double_1d
-
-SUBROUTINE ftg_read_double_2d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), TARGET :: field(:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_double_2d
-
-SUBROUTINE ftg_read_double_3d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), TARGET :: field(:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_double_3d
-
-SUBROUTINE ftg_read_double_4d(fieldname, field)
-  CHARACTER(LEN=*)                         :: fieldname
-  REAL(KIND=C_DOUBLE), INTENT(OUT), TARGET :: field(:,:,:,:)
-  LOGICAL :: registered_only
-
-  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    CALL fs_get_field_metainfo(serializer, fieldname, 'ftg:registered_only', registered_only)
-    IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
-    END IF
-  END IF
-END SUBROUTINE ftg_read_double_4d
+#end for
 
 !=============================================================================
 !=============================================================================

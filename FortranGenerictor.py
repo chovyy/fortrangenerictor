@@ -80,11 +80,12 @@ class FortranGenerictorNamespace(object):
     def types(self):
         return self.__types
 
-    def typesWithDimensions(self):
+    def typesWithDimensions(self, excludeRanks = []):
         twds = []
         for fortranType in self.types():
             for rank in fortranType.ranks:
-                twds.append(FortranTypeWithDimension(fortranType, rank))
+                if rank not in excludeRanks: 
+                    twds.append(FortranTypeWithDimension(fortranType, rank))
         twds[-1].isLast = True
         return twds
 
