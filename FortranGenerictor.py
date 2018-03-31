@@ -26,7 +26,7 @@ class FortranTypeWithDimension(object):
     def __init__(self, fortranType, rank):
         self.__type = fortranType
         self.__dimension = FortranDimension(rank)
-        self.last = False
+        self.isLast = False
         
     def name(self):
         return self.__type.name
@@ -41,7 +41,19 @@ class FortranTypeWithDimension(object):
         if self.__dimension.rank == 0:
             return ''
         
-        return '(' + ','.join([':'] * self.__dimension.rank) + ')' 
+        return '(' + ','.join([':'] * self.__dimension.rank) + ')'
+    
+    def unlessIsLast(self, string):
+        if not self.isLast:
+            return string
+        else:
+            return ''     
+    
+    def ifIsLast(self, string):
+        if self.isLast:
+            return string
+        else:
+            return ''     
 
 class FortranGenerictorNamespace(object):
     
@@ -73,7 +85,7 @@ class FortranGenerictorNamespace(object):
         for fortranType in self.types():
             for rank in fortranType.ranks:
                 twds.append(FortranTypeWithDimension(fortranType, rank))
-        twds[-1].last = True
+        twds[-1].isLast = True
         return twds
 
 if __name__ == "__main__":

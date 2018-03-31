@@ -1,7 +1,7 @@
 #silent $setDefaultRanks(range(0,5))
-#silent $addType('logical', 'l', 'LOGICAL')
-#silent $addType('bool', 'b', 'LOGICAL(KIND=C_BOOL)')
-#silent $addType('int', 'i', 'INTEGER')
+#silent $addType('logical', 'LOGICAL')
+#silent $addType('bool', 'LOGICAL(KIND=C_BOOL)')
+#silent $addType('int', 'INTEGER')
 #
 #for $t in $typesWithDimensions
 
