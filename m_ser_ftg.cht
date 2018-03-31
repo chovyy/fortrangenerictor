@@ -5,7 +5,7 @@
 #
 #for $t in $typesWithDimensions
 
-SUBROUTINE ftg_read_${t.fullname}_${t.shortname}${t.rank}(fieldname, field)
+SUBROUTINE ftg_read_${t.name}_${t.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
   ${t.datatype}, INTENT(OUT), TARGET :: field${t.dimension}
   LOGICAL :: registered_only
@@ -16,6 +16,6 @@ SUBROUTINE ftg_read_${t.fullname}_${t.shortname}${t.rank}(fieldname, field)
       CALL fs_read_field(serializer, savepoint, fieldname, field)
     END IF
   END IF
-END SUBROUTINE ftg_read_${t.fullname}_${t.shortname}${t.rank}
+END SUBROUTINE ftg_read_${t.name}_${t.rank}d
 #end for
 

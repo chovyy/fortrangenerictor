@@ -8,13 +8,12 @@ from Cheetah.Template import Template
 from assertions import assertType, assertTypeAll
 
 def main():
-    output = Template(file='m_ser_ftg.cht', searchList=[FortranGenerictorNamespace()])
+    output = Template(file='m_ser_ftg.f90.cht', searchList=[FortranGenerictorNamespace()])
     print output
 
 class FortranType(object):
-    def __init__(self, fullname, shortname, actualDatatype, ranks):
-        self.fullname = fullname
-        self.shortname = shortname
+    def __init__(self, name, actualDatatype, ranks):
+        self.name = name
         self.datatype = actualDatatype
         self.ranks = ranks
 
@@ -27,12 +26,10 @@ class FortranTypeWithDimension(object):
     def __init__(self, fortranType, rank):
         self.__type = fortranType
         self.__dimension = FortranDimension(rank)
+        self.last = False
         
-    def fullname(self):
-        return self.__type.fullname
-        
-    def shortname(self):
-        return self.__type.shortname
+    def name(self):
+        return self.__type.name
         
     def rank(self):
         return self.__dimension.rank
@@ -58,16 +55,15 @@ class FortranGenerictorNamespace(object):
         
         self.__defaultRanks = ranks
     
-    def addType(self, fullname, shortname, actualDatatype, ranks = None):
-        assertType(fullname, 'fullname', str)
-        assertType(shortname, 'shortname', str)
+    def addType(self, name, actualDatatype, ranks = None):
+        assertType(name, 'name', str)
         assertType(actualDatatype, 'actualDatatype', str)
         assertType(ranks, 'ranks', list, True)
         assertTypeAll(ranks, 'ranks', int, True)
         
         if ranks is None:
             ranks = self.__defaultRanks
-        self.__types.append(FortranType(fullname, shortname, actualDatatype, ranks))
+        self.__types.append(FortranType(name, actualDatatype, ranks))
     
     def types(self):
         return self.__types
@@ -77,6 +73,7 @@ class FortranGenerictorNamespace(object):
         for fortranType in self.types():
             for rank in fortranType.ranks:
                 twds.append(FortranTypeWithDimension(fortranType, rank))
+        twds[-1].last = True
         return twds
 
 if __name__ == "__main__":
