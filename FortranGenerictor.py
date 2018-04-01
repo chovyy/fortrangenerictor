@@ -6,10 +6,32 @@
 
 from Cheetah.Template import Template
 from assertions import assertType, assertTypeAll
+import os
 
 def main():
-    output = Template(file='m_ser_ftg.f90.cht', searchList=[FortranGenerictorNamespace()])
+    output = str(Template(file='m_ser_ftg.f90.cht', searchList=[FortranGenerictorNamespace()]))
+    output = alignColons(output)
     print output
+    
+def alignColons(code):
+    lines = code.splitlines()
+    firstDoubleColonLine = -1
+    highestDoubleColonPosition = -1
+    for i, line in enumerate(lines):
+        pos = line.find('::')
+        if pos >= 0:
+            if firstDoubleColonLine <= 0:
+                firstDoubleColonLine = i
+            if pos > highestDoubleColonPosition:
+                highestDoubleColonPosition = pos
+        else:
+            if firstDoubleColonLine >= 0:
+                for j, alignLine in enumerate(lines[firstDoubleColonLine:i]):
+                    pos = alignLine.find('::')
+                    lines[firstDoubleColonLine + j] = alignLine.replace('::', (highestDoubleColonPosition - pos) * ' ' + '::', 1)
+                firstDoubleColonLine = -1
+                highestDoubleColonPosition = -1
+    return os.linesep.join(lines)
 
 class FortranType(object):
     def __init__(self, name, actualDatatype, ranks):
