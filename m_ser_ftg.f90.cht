@@ -100,13 +100,23 @@ END INTERFACE
 
 INTERFACE ftg_allocate
     MODULE PROCEDURE &
-#for $td in $typesWithDimensions(excludeRanks = [0])  
+#for $td in $typesWithDimensions  
       ftg_allocate_pointer_${td.name}_${td.rank}d, &
 #end for      
-#for $td in $typesWithDimensions(excludeRanks = [0])
+#for $td in $typesWithDimensions
       ftg_allocate_allocatable_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
 #end for      
 END INTERFACE ftg_allocate
+
+INTERFACE ftg_allocate_and_read
+    MODULE PROCEDURE &
+#for $td in $typesWithDimensions  
+      ftg_allocate_and_read_pointer_${td.name}_${td.rank}d, &
+#end for  
+#for $td in $typesWithDimensions  
+      ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
+#end for   
+END INTERFACE ftg_allocate_and_read
 
 LOGICAL :: ignore_bullshit = .TRUE.
 INTEGER :: ignore_bullshit_max_dim_size = 999999999
@@ -593,6 +603,21 @@ END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 !=============================================================================
 
 #for $t in $types
+SUBROUTINE ftg_allocate_pointer_${t.name}_0d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), POINTER :: field
+
+  INTEGER, DIMENSION(8) :: bounds
+
+  IF (ftg_field_exists(fieldname)) THEN
+    bounds = ftg_get_bounds(fieldname)
+    ALLOCATE(field)
+  ELSE
+    NULLIFY(field)
+  END IF
+
+END SUBROUTINE ftg_allocate_pointer_${t.name}_0d
+
 SUBROUTINE ftg_allocate_pointer_${t.name}_1d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
   ${t.datatype}, INTENT(OUT), POINTER :: field(:)
@@ -638,7 +663,6 @@ SUBROUTINE ftg_allocate_pointer_${t.name}_3d(fieldname, field)
 
 END SUBROUTINE ftg_allocate_pointer_${t.name}_3d
 
-
 SUBROUTINE ftg_allocate_pointer_${t.name}_4d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
   ${t.datatype}, INTENT(OUT), POINTER :: field(:,:,:,:)
@@ -659,6 +683,19 @@ END SUBROUTINE ftg_allocate_pointer_${t.name}_4d
 !=============================================================================
 
 #for $t in $types
+SUBROUTINE ftg_allocate_allocatable_${t.name}_0d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field
+
+  INTEGER, DIMENSION(8) :: bounds
+
+  IF (ftg_field_exists(fieldname)) THEN
+    bounds = ftg_get_bounds(fieldname)
+    ALLOCATE(field)
+  END IF
+
+END SUBROUTINE ftg_allocate_allocatable_${t.name}_0d
+
 SUBROUTINE ftg_allocate_allocatable_${t.name}_1d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
   ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:)
@@ -710,6 +747,42 @@ SUBROUTINE ftg_allocate_allocatable_${t.name}_4d(fieldname, field)
   END IF
 
 END SUBROUTINE ftg_allocate_allocatable_${t.name}_4d
+
+#end for
+!=============================================================================
+!=============================================================================
+
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimension}
+  LOGICAL :: registered_only
+
+  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
+    IF (.NOT. ASSOCIATED(field)) THEN
+      CALL ftg_allocate(fieldname, field)
+    END IF
+    CALL ftg_read(fieldname, field)
+  END IF
+END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
+
+#end for
+!=============================================================================
+!=============================================================================
+
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, field)
+  CHARACTER(LEN=*) :: fieldname
+  ${td.datatype}, INTENT(OUT), ALLOCATABLE, TARGET :: field${td.dimension}
+  LOGICAL :: registered_only
+
+  IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
+    IF (.NOT. ALLOCATED(field)) THEN
+      CALL ftg_allocate(fieldname, field)
+    END IF
+    CALL ftg_read(fieldname, field)
+  END IF
+END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 
 #end for
 END MODULE m_ser_ftg
