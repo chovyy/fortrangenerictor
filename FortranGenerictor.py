@@ -110,6 +110,12 @@ class FortranGenerictorNamespace(object):
                     twds.append(FortranTypeWithDimension(fortranType, rank))
         twds[-1].isLast = True
         return twds
+    
+    def unlessIsLast(self, string, element, liste):
+        if liste.index(element) < len(liste) - 1:
+            return string
+        else:
+            return ''
 
 if __name__ == "__main__":
     main()
