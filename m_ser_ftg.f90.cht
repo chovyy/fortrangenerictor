@@ -608,7 +608,7 @@ END SUBROUTINE ftg_write_${t.name}_4d
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
-  ${td.datatype}, INTENT(OUT), TARGET :: field${td.dimension}
+  ${td.datatype}, INTENT(OUT), TARGET :: field${td.dimensions}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -623,151 +623,39 @@ END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 !=============================================================================
 !=============================================================================
 
-#for $t in $types
-SUBROUTINE ftg_allocate_pointer_${t.name}_0d(fieldname, field)
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), POINTER :: field
+  ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimensions}
 
   INTEGER, DIMENSION(8) :: bounds
 
   IF (ftg_field_exists(fieldname)) THEN
     bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field)
+    ALLOCATE(field${td.dimensions(['bounds(1)', 'bounds(3)', 'bounds(5)', 'bounds(7)'], ['bounds(2)', 'bounds(4)', 'bounds(6)', 'bounds(8)'])})
   ELSE
     NULLIFY(field)
   END IF
 
-END SUBROUTINE ftg_allocate_pointer_${t.name}_0d
-
-SUBROUTINE ftg_allocate_pointer_${t.name}_1d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), POINTER :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_${t.name}_1d
-
-SUBROUTINE ftg_allocate_pointer_${t.name}_2d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_${t.name}_2d
-
-SUBROUTINE ftg_allocate_pointer_${t.name}_3d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_${t.name}_3d
-
-SUBROUTINE ftg_allocate_pointer_${t.name}_4d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), POINTER :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  ELSE
-    NULLIFY(field)
-  END IF
-
-END SUBROUTINE ftg_allocate_pointer_${t.name}_4d
+END SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d
 
 #end for
 !=============================================================================
 !=============================================================================
 
-#for $t in $types
-SUBROUTINE ftg_allocate_allocatable_${t.name}_0d(fieldname, field)
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field
+  ${td.datatype}, INTENT(OUT), ALLOCATABLE :: field${td.dimensions}
 
   INTEGER, DIMENSION(8) :: bounds
 
   IF (ftg_field_exists(fieldname)) THEN
     bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field)
+    ALLOCATE(field${td.dimensions(['bounds(1)', 'bounds(3)', 'bounds(5)', 'bounds(7)'], ['bounds(2)', 'bounds(4)', 'bounds(6)', 'bounds(8)'])})
   END IF
 
-END SUBROUTINE ftg_allocate_allocatable_${t.name}_0d
-
-SUBROUTINE ftg_allocate_allocatable_${t.name}_1d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_${t.name}_1d
-
-SUBROUTINE ftg_allocate_allocatable_${t.name}_2d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_${t.name}_2d
-
-SUBROUTINE ftg_allocate_allocatable_${t.name}_3d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_${t.name}_3d
-
-SUBROUTINE ftg_allocate_allocatable_${t.name}_4d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${t.datatype}, INTENT(OUT), ALLOCATABLE :: field(:,:,:,:)
-
-  INTEGER, DIMENSION(8) :: bounds
-
-  IF (ftg_field_exists(fieldname)) THEN
-    bounds = ftg_get_bounds(fieldname)
-    ALLOCATE(field(bounds(1):bounds(2), bounds(3):bounds(4), bounds(5):bounds(6), bounds(7):bounds(8)))
-  END IF
-
-END SUBROUTINE ftg_allocate_allocatable_${t.name}_4d
+END SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d
 
 #end for
 !=============================================================================
@@ -776,7 +664,7 @@ END SUBROUTINE ftg_allocate_allocatable_${t.name}_4d
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
-  ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimension}
+  ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimensions}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -794,7 +682,7 @@ END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*) :: fieldname
-  ${td.datatype}, INTENT(OUT), ALLOCATABLE, TARGET :: field${td.dimension}
+  ${td.datatype}, INTENT(OUT), ALLOCATABLE, TARGET :: field${td.dimensions}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN

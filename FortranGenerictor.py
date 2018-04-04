@@ -59,11 +59,14 @@ class FortranTypeWithDimension(object):
     def datatype(self):
         return self.__type.datatype
         
-    def dimension(self):
+    def dimensions(self, lbounds = [], ubounds = []):
         if self.__dimension.rank == 0:
             return ''
         
-        return '(' + ','.join([':'] * self.__dimension.rank) + ')'
+        lbounds = lbounds + [''] * max(self.__dimension.rank - len(lbounds), 0)
+        ubounds = ubounds + [''] * max(self.__dimension.rank - len(ubounds), 0)
+        
+        return '(' + ','.join([lbounds[i] + ':' + ubounds[i] for i in range(0, self.__dimension.rank)]) + ')'
     
     def unlessIsLast(self, string):
         if not self.isLast:
