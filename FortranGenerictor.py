@@ -4,14 +4,21 @@
 @author: Christian Hovy
 '''
 
+import os
+import argparse
 from Cheetah.Template import Template
 from assertions import assertType, assertTypeAll
-import os
 
 def main():
-    output = str(Template(file='m_ser_ftg.f90.cht', searchList=[FortranGenerictorNamespace()]))
+    argParser = argparse.ArgumentParser(description='Generate test code.');
+    args = parseArguments(argParser);
+    output = str(Template(file=args.file, searchList=[FortranGenerictorNamespace()]))
     output = alignColons(output)
     print output
+    
+def parseArguments(argParser):
+    argParser.add_argument('file');
+    return argParser.parse_args();    
     
 def alignColons(code):
     lines = code.splitlines()
