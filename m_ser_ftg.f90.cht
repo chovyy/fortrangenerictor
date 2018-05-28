@@ -690,7 +690,7 @@ SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field
     IF (.NOT. ASSOCIATED(field)) THEN
       CALL ftg_allocate_pointer(fieldname, field)
     #if $td.rank > 0 
-    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(field)(:${td.rank}))) THEN
+    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(fieldname)(:${td.rank}))) THEN
       NULLIFY(field)
       CALL ftg_allocate_pointer(fieldname, field)
     #end if
@@ -713,7 +713,7 @@ SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, f
     IF (.NOT. ALLOCATED(field)) THEN
       CALL ftg_allocate_allocatable(fieldname, field)
     #if $td.rank > 0 
-    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(field)(:${td.rank}))) THEN
+    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(fieldname)(:${td.rank}))) THEN
       DEALLOCATE(field)
       CALL ftg_allocate_allocatable(fieldname, field)
     #end if
