@@ -278,6 +278,15 @@ END FUNCTION ftg_field_exists
 !=============================================================================
 !=============================================================================
 
+FUNCTION ftg_get_size(fieldname)
+
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  INTEGER, DIMENSION(4) :: ftg_get_size
+
+  ftg_get_size = fs_get_size(serializer,  fieldname)
+
+END FUNCTION ftg_get_size
+
 FUNCTION ftg_get_bounds(fieldname)
 
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
@@ -680,6 +689,11 @@ SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
     IF (.NOT. ASSOCIATED(field)) THEN
       CALL ftg_allocate_pointer(fieldname, field)
+    #if $td.rank > 0 
+    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(field)(:${td.rank}))) THEN
+      NULLIFY(field)
+      CALL ftg_allocate_pointer(fieldname, field)
+    #end if
     END IF
     CALL ftg_read(fieldname, field)
   END IF
@@ -698,6 +712,11 @@ SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, f
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
     IF (.NOT. ALLOCATED(field)) THEN
       CALL ftg_allocate_allocatable(fieldname, field)
+    #if $td.rank > 0 
+    ELSE IF (SIZE(SHAPE(field)) /= ${td.rank} .OR. ANY(SHAPE(field) /= ftg_get_size(field)(:${td.rank}))) THEN
+      DEALLOCATE(field)
+      CALL ftg_allocate_allocatable(fieldname, field)
+    #end if
     END IF
     CALL ftg_read(fieldname, field)
   END IF
