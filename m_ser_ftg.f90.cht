@@ -641,7 +641,7 @@ END SUBROUTINE ftg_write_${t.name}_4d
 
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), TARGET :: field${td.dimensions}
   LOGICAL :: registered_only
 
@@ -659,7 +659,7 @@ END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimensions}
 
   INTEGER, DIMENSION(8) :: bounds
@@ -679,7 +679,7 @@ END SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d
 
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), ALLOCATABLE :: field${td.dimensions}
 
   INTEGER, DIMENSION(8) :: bounds
@@ -697,8 +697,8 @@ END SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d
 
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimensions}
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  ${td.datatype}, INTENT(INOUT), POINTER :: field${td.dimensions}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -720,8 +720,8 @@ END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
 
 #for $td in $typesWithDimensions
 SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, field)
-  CHARACTER(LEN=*) :: fieldname
-  ${td.datatype}, INTENT(OUT), ALLOCATABLE, TARGET :: field${td.dimensions}
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  ${td.datatype}, INTENT(INOUT), ALLOCATABLE, TARGET :: field${td.dimensions}
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
