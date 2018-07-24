@@ -640,15 +640,16 @@ END SUBROUTINE ftg_write_${t.name}_4d
 !=============================================================================
 
 #for $td in $typesWithDimensions
-SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field)
+SUBROUTINE ftg_read_${td.name}_${td.rank}d(fieldname, field, rperturb)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), TARGET :: field${td.dimensions}
+  REAL, INTENT(IN), OPTIONAL   :: rperturb
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
     CALL ftg_get_field_metainfo(fieldname, 'ftg:registered_only', registered_only)
     IF (.NOT. registered_only) THEN
-      CALL fs_read_field(serializer, savepoint, fieldname, field)
+      CALL fs_read_field(serializer, savepoint, fieldname, field, rperturb)
     END IF
   END IF
 END SUBROUTINE ftg_read_${td.name}_${td.rank}d
@@ -696,9 +697,10 @@ END SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d
 !=============================================================================
 
 #for $td in $typesWithDimensions
-SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field)
+SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field, rperturb)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(INOUT), POINTER :: field${td.dimensions}
+  REAL, INTENT(IN), OPTIONAL   :: rperturb
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -710,7 +712,7 @@ SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field
       CALL ftg_allocate_pointer(fieldname, field)
     #end if
     END IF
-    CALL ftg_read(fieldname, field)
+    CALL ftg_read(fieldname, field, rperturb)
   END IF
 END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
 
@@ -719,9 +721,10 @@ END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
 !=============================================================================
 
 #for $td in $typesWithDimensions
-SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, field)
+SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, field, rperturb)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(INOUT), ALLOCATABLE, TARGET :: field${td.dimensions}
+  REAL, INTENT(IN), OPTIONAL   :: rperturb
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
@@ -733,7 +736,7 @@ SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, f
       CALL ftg_allocate_allocatable(fieldname, field)
     #end if
     END IF
-    CALL ftg_read(fieldname, field)
+    CALL ftg_read(fieldname, field, rperturb)
   END IF
 END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 
