@@ -154,6 +154,13 @@ INTERFACE ftg_allocate_and_read_allocatable
   #end for   
 END INTERFACE ftg_allocate_and_read_allocatable
 
+INTERFACE ftg_compare
+  MODULE PROCEDURE &
+  #for $td in $typesWithDimensions  
+    ftg_compare_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
+  #end for   
+END INTERFACE ftg_compare
+
 LOGICAL :: ignore_bullshit = .TRUE.
 INTEGER :: ignore_bullshit_max_dim_size = 999999999
 LOGICAL :: ignore_bullshit_allow_negative_indices = .TRUE.
@@ -739,6 +746,39 @@ SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, f
     CALL ftg_read(fieldname, field, rperturb)
   END IF
 END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
+
+#end for
+!=============================================================================
+!=============================================================================
+
+! TODO andere Version für Skalare
+! TODO anderer Operator für Logicals
+! TODO Toleranz für Reals
+
+#for $td in $typesWithDimensions
+SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc)
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  ${td.datatype}, INTENT(IN) :: field${td.dimensions}
+  LOGICAL, INTENT(OUT) :: result
+  LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
+  ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
+  
+  result = .TRUE.
+  
+  IF (.NOT. ftg_match_size(fieldname, ${td.rank}, SHAPE(field))) THEN
+    result = .FALSE.
+  ELSE
+    CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+    IF (ANY(field /= stored_field)) THEN
+      result = .FALSE.
+    END IF
+  END IF
+  
+  IF (PRESENT(result_acc)) THEN
+    result_acc = result_acc .AND. result
+  END IF
+    
+END SUBROUTINE ftg_compare_${td.name}_${td.rank}d
 
 #end for
 END MODULE m_ser_ftg
