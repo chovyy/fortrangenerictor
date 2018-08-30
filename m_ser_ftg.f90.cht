@@ -751,11 +751,33 @@ END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 !=============================================================================
 !=============================================================================
 
-! TODO andere Version für Skalare
 ! TODO anderer Operator für Logicals
 ! TODO Toleranz für Reals
 
-#for $td in $typesWithDimensions
+#for $td in $types
+SUBROUTINE ftg_compare_${td.name}_0d(fieldname, field, result, result_acc)
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  ${td.datatype}, INTENT(IN) :: field
+  LOGICAL, INTENT(OUT) :: result
+  LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
+  ${td.datatype}, ALLOCATABLE :: stored_field
+  
+  result = .TRUE.
+  
+  CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+  IF (field /= stored_field) THEN
+    result = .FALSE.
+  END IF
+  
+  IF (PRESENT(result_acc)) THEN
+    result_acc = result_acc .AND. result
+  END IF
+    
+END SUBROUTINE ftg_compare_${td.name}_0d
+
+#end for
+
+#for $td in $typesWithDimensions([0])
 SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
