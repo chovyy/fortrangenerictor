@@ -751,33 +751,12 @@ END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 !=============================================================================
 !=============================================================================
 
-! TODO anderer Operator für Logicals
-! TODO Toleranz für Reals
-
-#for $td in $types
-SUBROUTINE ftg_compare_${td.name}_0d(fieldname, field, result, result_acc)
-  CHARACTER(LEN=*), INTENT(IN) :: fieldname
-  ${td.datatype}, INTENT(IN) :: field
-  LOGICAL, INTENT(OUT) :: result
-  LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
-  ${td.datatype}, ALLOCATABLE :: stored_field
-  
-  result = .TRUE.
-  
-  CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-  IF (field /= stored_field) THEN
-    result = .FALSE.
-  END IF
-  
-  IF (PRESENT(result_acc)) THEN
-    result_acc = result_acc .AND. result
-  END IF
-    
-END SUBROUTINE ftg_compare_${td.name}_0d
-
-#end for
-
-#for $td in $typesWithDimensions([0])
+#for $td in $typesWithDimensions
+  #if $td.name == 'logical' or $td.name == 'bool'
+    #set $neq = '.NEQV.'
+  #else
+    #set $neq = '/='
+  #end if
 SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
@@ -786,15 +765,22 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
   
   result = .TRUE.
-  
+
+  #if $td.rank == 0
+  CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+  IF (field $neq stored_field) THEN
+    result = .FALSE.
+  END IF
+  #else 
   IF (.NOT. ftg_match_size(fieldname, ${td.rank}, SHAPE(field))) THEN
     result = .FALSE.
   ELSE
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-    IF (ANY(field /= stored_field)) THEN
+    IF (ANY(field $neq stored_field)) THEN
       result = .FALSE.
     END IF
   END IF
+  #end if
   
   IF (PRESENT(result_acc)) THEN
     result_acc = result_acc .AND. result
