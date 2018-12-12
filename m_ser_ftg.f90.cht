@@ -673,11 +673,10 @@ SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d(fieldname, field)
 
   INTEGER, DIMENSION(8) :: bounds
 
+  NULLIFY(field)
   IF (ftg_field_exists(fieldname)) THEN
     bounds = ftg_get_bounds(fieldname)
     ALLOCATE(field${td.dimensions(['bounds(1)', 'bounds(3)', 'bounds(5)', 'bounds(7)'], ['bounds(2)', 'bounds(4)', 'bounds(6)', 'bounds(8)'])})
-  ELSE
-    NULLIFY(field)
   END IF
 
 END SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d
@@ -712,14 +711,7 @@ SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d(fieldname, field
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    IF (.NOT. ASSOCIATED(field)) THEN
-      CALL ftg_allocate_pointer(fieldname, field)
-    #if $td.rank > 0 
-    ELSE IF (.NOT. ftg_match_size(fieldname, $td.rank, SHAPE(field))) THEN
-      NULLIFY(field)
-      CALL ftg_allocate_pointer(fieldname, field)
-    #end if
-    END IF
+    CALL ftg_allocate_pointer(fieldname, field)
     CALL ftg_read(fieldname, field, rperturb)
   END IF
 END SUBROUTINE ftg_allocate_and_read_pointer_${td.name}_${td.rank}d
