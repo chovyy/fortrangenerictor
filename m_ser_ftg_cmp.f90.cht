@@ -70,14 +70,28 @@ FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
 
   CHARACTER(LEN=*), INTENT(IN) :: fieldname, fieldname_print
   INTEGER, INTENT(IN) :: actual_shape(:)
-  INTEGER :: rank, expected_size(4)
+  INTEGER :: rank, expected_shape(4), i
   LOGICAL :: ftg_cmp_size
   
   rank = SIZE(actual_shape)
-  expected_size = ftg_get_size(fieldname)
-  ftg_cmp_size =  ALL(actual_shape == expected_size(:rank))
+  expected_shape = ftg_get_size(fieldname)
+  ftg_cmp_size =  ALL(actual_shape == expected_shape(:rank))
   IF (.NOT. ftg_cmp_size) THEN
-    WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname_print), ": size don't match"
+    WRITE (*,'(A,A,A,A)',advance="no") TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Size doesn't match, expected: ("
+    DO i = 1, rank
+      IF (i > 1) THEN
+        WRITE(*,'(A)',advance="no") ', '
+      END IF
+      WRITE (*,'(I0)',advance="no") expected_shape(i)
+    END DO
+    WRITE (*,'(A)',advance="no") "), actual: ("
+    DO i = 1, rank
+      IF (i > 1) THEN
+        WRITE(*,'(A)',advance="no") ', '
+      END IF
+      WRITE (*,'(I0)',advance="no") actual_shape(i)
+    END DO
+    WRITE (*,'(A)') ")"
   END IF
 
 END FUNCTION ftg_cmp_size
