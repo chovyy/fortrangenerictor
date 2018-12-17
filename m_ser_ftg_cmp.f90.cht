@@ -66,17 +66,17 @@ CONTAINS
 !=============================================================================
 !=============================================================================
 
-FUNCTION ftg_match_size(fieldname, expected_rank, actual_shape)
+FUNCTION ftg_cmp_size(fieldname, expected_rank, actual_shape)
 
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   INTEGER, INTENT(IN) :: expected_rank, actual_shape(:)
   INTEGER :: expected_size(4)
-  LOGICAL :: ftg_match_size
+  LOGICAL :: ftg_cmp_size
   
   expected_size = ftg_get_size(fieldname)
-  ftg_match_size = SIZE(actual_shape) == expected_rank .AND. ALL(actual_shape == expected_size(:expected_rank))
+  ftg_cmp_size = SIZE(actual_shape) == expected_rank .AND. ALL(actual_shape == expected_size(:expected_rank))
 
-END FUNCTION ftg_match_size
+END FUNCTION ftg_cmp_size
 
 !=============================================================================
 !=============================================================================
@@ -117,7 +117,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     result = .FALSE.
   END IF
   #else 
-  IF (.NOT. ftg_match_size(fieldname, ${td.rank}, SHAPE(field))) THEN
+  IF (.NOT. ftg_cmp_size(fieldname, ${td.rank}, SHAPE(field))) THEN
     WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname), ": size don't match"
     result = .FALSE.
   ELSE
