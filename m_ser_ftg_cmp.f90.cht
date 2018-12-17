@@ -75,6 +75,9 @@ FUNCTION ftg_cmp_size(fieldname, expected_rank, actual_shape)
   
   expected_size = ftg_get_size(fieldname)
   ftg_cmp_size = SIZE(actual_shape) == expected_rank .AND. ALL(actual_shape == expected_size(:expected_rank))
+  IF (.NOT. ftg_cmp_size) THEN
+    WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname), ": size don't match"
+  END IF
 
 END FUNCTION ftg_cmp_size
 
