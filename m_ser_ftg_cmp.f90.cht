@@ -86,8 +86,8 @@ END FUNCTION ftg_cmp_size
 
 #for $td in $typesWithDimensions
   #if $td.name == 'float' or $td.name == 'double'
-    #set $cmp = 'ABS(field - stored_field) > tolerance'
-    #set $tol = ', opt_tolerance'
+    #set $cmp = 'ABS(field - stored_field) > t'
+    #set $tol = ', tolerance'
   #elif $td.name == 'logical' or $td.name == 'bool'
     #set $cmp = 'field .NEQV. stored_field'
     #set $tol = ''
@@ -104,13 +104,13 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
   CHARACTER(LEN=256) :: fieldname_print
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
   #if $td.name == 'float' or $td.name == 'double'
-  ${td.datatype}, INTENT(in), OPTIONAL :: opt_tolerance
-  ${td.datatype} :: tolerance
+  ${td.datatype}, INTENT(in), OPTIONAL :: tolerance
+  ${td.datatype} :: t
   
-  IF (PRESENT(opt_tolerance)) THEN
-    tolerance = opt_tolerance
+  IF (PRESENT(tolerance)) THEN
+    t = tolerance
   ELSE
-    tolerance = ftg_cmp_default_tolerance
+    t = ftg_cmp_default_tolerance
   END IF
   #end if
   
