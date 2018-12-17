@@ -745,17 +745,32 @@ END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 !=============================================================================
 
 #for $td in $typesWithDimensions
-  #if $td.name == 'logical' or $td.name == 'bool'
+  #if $td.name == 'float' or $td.name == 'double'
+    #set $cmp = 'ABS(field - stored_field) > tolerance'
+    #set $tol = ', opt_tolerance'
+  #elif $td.name == 'logical' or $td.name == 'bool'
     #set $cmp = 'field .NEQV. stored_field'
+    #set $tol = ''
   #else
     #set $cmp = 'field /= stored_field'
+    #set $tol = ''
   #end if
-SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc)
+SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc$tol)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
   LOGICAL, INTENT(OUT) :: result
   LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
+  #if $td.name == 'float' or $td.name == 'double'
+  ${td.datatype}, INTENT(in), OPTIONAL :: opt_tolerance
+  ${td.datatype} :: tolerance
+  
+  IF (PRESENT(opt_tolerance)) THEN
+    tolerance = opt_tolerance
+  ELSE
+    tolerance = ftg_cmp_default_tolerance
+  END IF
+  #end if
   
   result = .TRUE.
 
