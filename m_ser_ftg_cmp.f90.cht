@@ -114,18 +114,24 @@ END FUNCTION ftg_cmp_size
 SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
-  ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
+  ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
   INTEGER :: max_deltas_indices(ftg_cmp_max_print_deviations, ${td.rank}), i
   
+  mask = expected $cmpOprt actual
   #if $td.name != 'logical' and $td.name != 'bool'
   deltas = expected - actual
-  #end if
-  mask = expected $cmpOprt actual
   DO i = 1, ftg_cmp_max_print_deviations
+    IF (ANY(mask)) THEN
+      max_deltas_indices(i,:) = MAXLOC(deltas, mask)
+    ELSE
+      max_deltas_indices(i,:) = 0
+    END IF    
+    !TODO Set mask
   END DO
+  #end if
 
-  WRITE (*,*) deltas
+  WRITE (*,*) TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : ", max_deltas_indices
   
 END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
