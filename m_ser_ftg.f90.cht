@@ -692,6 +692,9 @@ SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d(fieldname, field)
 
   INTEGER, DIMENSION(8) :: bounds
 
+  IF (ALLOCATED(field)) THEN
+    DEALLOCATE(field)
+  END IF
   IF (ftg_field_exists(fieldname)) THEN
     bounds = ftg_get_bounds(fieldname)
     ALLOCATE(field${td.dimensions(['bounds(1)', 'bounds(3)', 'bounds(5)', 'bounds(7)'], ['bounds(2)', 'bounds(4)', 'bounds(6)', 'bounds(8)'])})
@@ -728,14 +731,7 @@ SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d(fieldname, f
   LOGICAL :: registered_only
 
   IF (.NOT. ignore_not_existing .OR. ftg_field_exists(fieldname)) THEN
-    IF (.NOT. ALLOCATED(field)) THEN
-      CALL ftg_allocate_allocatable(fieldname, field)
-    #if $td.rank > 0 
-    ELSE IF (.NOT. ftg_match_size(fieldname, $td.rank, SHAPE(field))) THEN
-      DEALLOCATE(field)
-      CALL ftg_allocate_allocatable(fieldname, field)
-    #end if
-    END IF
+    CALL ftg_allocate_allocatable(fieldname, field)
     CALL ftg_read(fieldname, field, rperturb)
   END IF
 END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
