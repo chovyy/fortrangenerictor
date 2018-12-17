@@ -1,0 +1,138 @@
+#silent $setDefaultRanks(range(0,5))
+#silent $addType('logical', 'LOGICAL')
+#silent $addType('bool', 'LOGICAL(KIND=C_BOOL)')
+#silent $addType('int', 'INTEGER')
+#silent $addType('long', 'INTEGER(KIND=C_LONG)')
+#silent $addType('float', 'REAL(KIND=C_FLOAT)')
+#silent $addType('double', 'REAL(KIND=C_DOUBLE)')
+#set $metainfoGetterTypes = [('b', 'LOGICAL'), ('i', 'INTEGER(KIND=C_INT)'),  ('l', 'INTEGER(KIND=C_LONG)'), ('f', 'REAL(KIND=C_FLOAT)'), ('d', 'REAL(KIND=C_DOUBLE)')]  
+#set $metainfoSetterTypes = $metainfoGetterTypes + [('s', 'CHARACTER(LEN=*)')]   
+!------------------------------------------------------------*- Fortran -*-----
+!
+!                              S E R I A L B O X
+!
+! This file is distributed under terms of BSD license.
+! See LICENSE.txt for more information.
+!
+!------------------------------------------------------------------------------
+!
+!+ This module contains the FortranTestGenerator (FTG) frontend of Serialbox2.
+!+ For FTG see https://github.com/fortesg/fortrantestgenerator
+!
+!------------------------------------------------------------------------------
+
+MODULE m_ser_ftg_cmp
+
+!------------------------------------------------------------------------------
+!
+! Description:
+!
+!   This module contains subroutines to compare a given field with stored values. 
+!   To be used by the FortranTestGenerator (https://github.com/fortesg/fortrantestgenerator)
+!
+! Current Code Owner: Christian Hovy, Universitaet Hamburg
+!  email:  hovy@informatik.uni-hamburg.de
+!
+! Code Description:
+! Language: Fortran 90.
+! Software Standards: "European Standards for Writing and
+! Documenting Exchangeable Fortran 90 Code".
+!============================================================================
+
+USE iso_c_binding
+USE m_ser_ftg
+
+IMPLICIT NONE
+
+PUBLIC :: ftg_cmp_default_tolerance, ftg_cmp_max_print_deviations, ftg_cmp_message_prefix, ftg_compare
+
+PRIVATE
+
+CHARACTER(LEN=*), PARAMETER :: module_name = 'm_ser_ftg_cmp'
+
+INTERFACE ftg_compare
+  MODULE PROCEDURE &
+  #for $td in $typesWithDimensions  
+    ftg_compare_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
+  #end for   
+END INTERFACE ftg_compare
+
+REAL :: ftg_cmp_default_tolerance = 0.0
+INTEGER :: ftg_cmp_max_print_deviations = 10
+CHARACTER(len=64) :: ftg_cmp_message_prefix = 'FTG Compare ***'
+
+CONTAINS
+
+!=============================================================================
+!=============================================================================
+
+FUNCTION ftg_match_size(fieldname, expected_rank, actual_shape)
+
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  INTEGER, INTENT(IN) :: expected_rank, actual_shape(:)
+  INTEGER :: expected_size(4)
+  LOGICAL :: ftg_match_size
+  
+  expected_size = ftg_get_size(fieldname)
+  ftg_match_size = SIZE(actual_shape) == expected_rank .AND. ALL(actual_shape == expected_size(:expected_rank))
+
+END FUNCTION ftg_match_size
+
+!=============================================================================
+!=============================================================================
+
+#for $td in $typesWithDimensions
+  #if $td.name == 'float' or $td.name == 'double'
+    #set $cmp = 'ABS(field - stored_field) > tolerance'
+    #set $tol = ', opt_tolerance'
+  #elif $td.name == 'logical' or $td.name == 'bool'
+    #set $cmp = 'field .NEQV. stored_field'
+    #set $tol = ''
+  #else
+    #set $cmp = 'field /= stored_field'
+    #set $tol = ''
+  #end if
+SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc$tol)
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname
+  ${td.datatype}, INTENT(IN) :: field${td.dimensions}
+  LOGICAL, INTENT(OUT) :: result
+  LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
+  ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
+  #if $td.name == 'float' or $td.name == 'double'
+  ${td.datatype}, INTENT(in), OPTIONAL :: opt_tolerance
+  ${td.datatype} :: tolerance
+  
+  IF (PRESENT(opt_tolerance)) THEN
+    tolerance = opt_tolerance
+  ELSE
+    tolerance = ftg_cmp_default_tolerance
+  END IF
+  #end if
+  
+  result = .TRUE.
+
+  #if $td.rank == 0
+  CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+  IF ($cmp) THEN
+    result = .FALSE.
+  END IF
+  #else 
+  IF (.NOT. ftg_match_size(fieldname, ${td.rank}, SHAPE(field))) THEN
+    WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname), ": size don't match"
+    result = .FALSE.
+  ELSE
+    CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+    IF (ANY($cmp)) THEN
+      result = .FALSE.
+    END IF
+  END IF
+  #end if
+  
+  IF (PRESENT(result_acc)) THEN
+    result_acc = result_acc .AND. result
+  END IF
+    
+END SUBROUTINE ftg_compare_${td.name}_${td.rank}d
+
+#end for
+END MODULE m_ser_ftg_cmp
