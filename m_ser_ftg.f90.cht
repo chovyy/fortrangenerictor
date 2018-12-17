@@ -746,9 +746,9 @@ END SUBROUTINE ftg_allocate_and_read_allocatable_${td.name}_${td.rank}d
 
 #for $td in $typesWithDimensions
   #if $td.name == 'logical' or $td.name == 'bool'
-    #set $neq = '.NEQV.'
+    #set $cmp = 'field .NEQV. stored_field'
   #else
-    #set $neq = '/='
+    #set $cmp = 'field /= stored_field'
   #end if
 SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
@@ -761,7 +761,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
 
   #if $td.rank == 0
   CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-  IF (field $neq stored_field) THEN
+  IF ($cmp) THEN
     result = .FALSE.
   END IF
   #else 
@@ -769,7 +769,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     result = .FALSE.
   ELSE
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-    IF (ANY(field $neq stored_field)) THEN
+    IF (ANY($cmp)) THEN
       result = .FALSE.
     END IF
   END IF
