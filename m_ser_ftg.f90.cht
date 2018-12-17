@@ -169,7 +169,7 @@ LOGICAL :: ignore_not_existing = .TRUE.
 
 REAL :: ftg_cmp_default_tolerance = 0.0
 INTEGER :: ftg_cmp_max_print_deviations = 10
-CHARACTER(len=64) :: ftg_cmp_message_prefix = ''
+CHARACTER(len=64) :: ftg_cmp_message_prefix = 'FTG Compare ***'
 
 TYPE(t_serializer), POINTER :: serializer => NULL()
 TYPE(t_savepoint),  POINTER :: savepoint  => NULL()
@@ -781,6 +781,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
   END IF
   #else 
   IF (.NOT. ftg_match_size(fieldname, ${td.rank}, SHAPE(field))) THEN
+    WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname), ": size don't match"
     result = .FALSE.
   ELSE
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
