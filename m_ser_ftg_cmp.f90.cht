@@ -66,15 +66,16 @@ CONTAINS
 !=============================================================================
 !=============================================================================
 
-FUNCTION ftg_cmp_size(fieldname, expected_rank, actual_shape, fieldname_print)
+FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
 
   CHARACTER(LEN=*), INTENT(IN) :: fieldname, fieldname_print
-  INTEGER, INTENT(IN) :: expected_rank, actual_shape(:)
-  INTEGER :: expected_size(4)
+  INTEGER, INTENT(IN) :: actual_shape(:)
+  INTEGER :: rank, expected_size(4)
   LOGICAL :: ftg_cmp_size
   
+  rank = SIZE(actual_shape)
   expected_size = ftg_get_size(fieldname)
-  ftg_cmp_size = SIZE(actual_shape) == expected_rank .AND. ALL(actual_shape == expected_size(:expected_rank))
+  ftg_cmp_size =  ALL(actual_shape == expected_size(:rank))
   IF (.NOT. ftg_cmp_size) THEN
     WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname_print), ": size don't match"
   END IF
@@ -128,8 +129,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     result = .FALSE.
   END IF
   #else 
-  IF (.NOT. ftg_cmp_size(fieldname, ${td.rank}, SHAPE(field), fieldname_print)) THEN
-    WRITE (*,*) TRIM(ftg_cmp_message_prefix), ' ', TRIM(fieldname_print), " : size doesn't match"
+  IF (.NOT. ftg_cmp_size(fieldname, SHAPE(field), fieldname_print)) THEN
     result = .FALSE.
   ELSE
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
