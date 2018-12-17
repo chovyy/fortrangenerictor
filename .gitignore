@@ -1,1 +1,4 @@
 *.pyc
+/ftgdata/
+/laplacian/
+/sbdata/
