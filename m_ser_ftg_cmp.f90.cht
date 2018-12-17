@@ -50,6 +50,13 @@ PRIVATE
 
 CHARACTER(LEN=*), PARAMETER :: module_name = 'm_ser_ftg_cmp'
 
+INTERFACE ftg_cmp_print_deviations
+  MODULE PROCEDURE &
+  #for $td in $typesWithDimensions(excludeRanks = [0])
+    ftg_cmp_print_deviations_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
+  #end for   
+END INTERFACE ftg_cmp_print_deviations
+
 INTERFACE ftg_compare
   MODULE PROCEDURE &
   #for $td in $typesWithDimensions  
@@ -96,6 +103,33 @@ FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
 
 END FUNCTION ftg_cmp_size
 
+!=============================================================================
+!=============================================================================
+#for $td in $typesWithDimensions(excludeRanks = [0])
+  #if $td.name == 'logical' or $td.name == 'bool'
+    #set $cmpOprt = '.NEQV.'
+  #else
+    #set $cmpOprt = '/='
+  #end if
+SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
+  ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
+  ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
+  LOGICAL, ALLOCATABLE :: mask${td.dimensions}
+  INTEGER :: max_deltas_indices(ftg_cmp_max_print_deviations, ${td.rank}), i
+  
+  #if $td.name != 'logical' and $td.name != 'bool'
+  deltas = expected - actual
+  #end if
+  mask = expected $cmpOprt actual
+  DO i = 1, ftg_cmp_max_print_deviations
+  END DO
+
+  WRITE (*,*) deltas
+  
+END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
+
+#end for
 !=============================================================================
 !=============================================================================
 
@@ -149,6 +183,9 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
     IF (ANY($cmp)) THEN
       result = .FALSE.
+      IF (ftg_cmp_max_print_deviations > 0) THEN
+        CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
+      END IF 
     END IF
   END IF
   #end if
