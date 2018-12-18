@@ -105,33 +105,58 @@ END FUNCTION ftg_cmp_size
 
 !=============================================================================
 !=============================================================================
-#for $td in $typesWithDimensions(excludeRanks = [0])
+#for $td in $typesWithDimensions(excludeTypes = ['int', 'long', 'float', 'double'], excludeRanks = [0])
   #if $td.name == 'logical' or $td.name == 'bool'
     #set $cmpOprt = '.NEQV.'
   #else
     #set $cmpOprt = '/='
   #end if
+  #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
+  #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
+  #set $contentFmt = {'logical':'L0', 'bool':'L0'}[$td.name]
+SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
+  ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
+  LOGICAL, ALLOCATABLE :: mask${td.dimensions}
+  INTEGER :: indices(${td.rank}), i, j
+  
+  mask = expected $cmpOprt actual
+  
+END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
+
+#end for
+#for $td in $typesWithDimensions(excludeTypes = ['logical', 'bool'], excludeRanks = [0])
+  #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
+  #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
+  #set $contentFmt = {'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$td.name]
 SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
-  INTEGER :: max_deltas_indices(ftg_cmp_max_print_deviations, ${td.rank}), i
+  INTEGER :: indices(${td.rank}), i, j
   
-  mask = expected $cmpOprt actual
-  #if $td.name != 'logical' and $td.name != 'bool'
+  mask = expected /= actual
   deltas = expected - actual
   DO i = 1, ftg_cmp_max_print_deviations
     IF (ANY(mask)) THEN
-      max_deltas_indices(i,:) = MAXLOC(deltas, mask)
+      indices = MAXLOC(deltas, mask)
+      WRITE (*,'(A)',advance="no") "  -> ("
+      #for r in range(1, $td.rank + 1)
+      #if r > 1
+      WRITE (*,'(A)',advance="no") ", "
+      #end if
+      WRITE (*,'(I0)',advance="no") indices($r)
+      #end for
+      WRITE (*,'(A)',advance="no") "), expected: "
+      WRITE (*,'($contentFmt)',advance="no") expected($indices)
+      WRITE (*,'(A)',advance="no") ", actual: "
+      WRITE (*,'($contentFmt)') actual($indices)
+      mask($indices) = .FALSE.
     ELSE
-      max_deltas_indices(i,:) = 0
+      EXIT
     END IF    
-    !TODO Set mask
   END DO
-  #end if
-
-  WRITE (*,*) TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : ", max_deltas_indices
   
 END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
@@ -190,6 +215,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     IF (ANY($cmp)) THEN
       result = .FALSE.
       IF (ftg_cmp_max_print_deviations > 0) THEN
+        WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
         CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
       END IF 
     END IF
