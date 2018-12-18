@@ -120,11 +120,12 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
-  INTEGER :: $indicesJoined
+  INTEGER :: $indicesJoined, counter
   
   mask = expected $cmpOprt actual
+  counter = 1
   
-  DO i = 1, SIZE(mask, 1)
+  outer: DO i = 1, SIZE(mask, 1)
     #if $td.rank > 1
     DO j = 1, SIZE(mask, 2)
     #end if
@@ -146,6 +147,10 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
             WRITE (*,'(L0)',advance="no") expected($indicesJoined)
             WRITE (*,'(A)',advance="no") ", actual: "
             WRITE (*,'(L0)') actual($indicesJoined)
+            counter = counter + 1
+            IF (counter > ftg_cmp_max_print_deviations) THEN
+              EXIT outer
+            END IF
           END IF
         #if $td.rank > 3
         END DO
@@ -156,7 +161,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
     #if $td.rank > 1
       END DO
     #end if
-  END DO
+  END DO outer
   
 END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
