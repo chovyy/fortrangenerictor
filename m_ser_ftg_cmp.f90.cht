@@ -104,23 +104,59 @@ FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
 END FUNCTION ftg_cmp_size
 
 !=============================================================================
+!TODO UBOUND und LBOUND uebergeben und Indizes justieren
 !=============================================================================
+
 #for $td in $typesWithDimensions(excludeTypes = ['int', 'long', 'float', 'double'], excludeRanks = [0])
   #if $td.name == 'logical' or $td.name == 'bool'
     #set $cmpOprt = '.NEQV.'
   #else
     #set $cmpOprt = '/='
   #end if
-  #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
+  #set $indices = ['i', 'j', 'k', 'l'][:$td.rank]
+  #set $indicesJoined = ', '.join($indices)
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
-  #set $contentFmt = {'logical':'L0', 'bool':'L0'}[$td.name]
 SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
-  INTEGER :: indices(${td.rank}), i, j
+  INTEGER :: $indicesJoined
   
   mask = expected $cmpOprt actual
+  
+  DO i = 1, SIZE(mask, 1)
+    #if $td.rank > 1
+    DO j = 1, SIZE(mask, 2)
+    #end if
+      #if $td.rank > 2
+      DO k = 1, SIZE(mask, 3)
+      #end if
+        #if $td.rank > 3
+        DO l = 1, SIZE(mask, 4)
+        #end if
+          IF (mask($indicesJoined)) THEN
+            WRITE (*,'(A)',advance="no") "  -> ("
+            #for $index in $indices
+            #if $index != 'i'
+            WRITE (*,'(A)',advance="no") ", "
+            #end if
+            WRITE (*,'(I0)',advance="no") $index
+            #end for
+            WRITE (*,'(A)',advance="no") "), expected: "
+            WRITE (*,'(L0)',advance="no") expected($indicesJoined)
+            WRITE (*,'(A)',advance="no") ", actual: "
+            WRITE (*,'(L0)') actual($indicesJoined)
+          END IF
+        #if $td.rank > 3
+        END DO
+       #end if
+      #if $td.rank > 2
+          END DO
+      #end if
+    #if $td.rank > 1
+      END DO
+    #end if
+  END DO
   
 END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
@@ -142,8 +178,8 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
     IF (ANY(mask)) THEN
       indices = MAXLOC(deltas, mask)
       WRITE (*,'(A)',advance="no") "  -> ("
-      #for r in range(1, $td.rank + 1)
-      #if r > 1
+      #for $r in range(1, $td.rank + 1)
+      #if $r > 1
       WRITE (*,'(A)',advance="no") ", "
       #end if
       WRITE (*,'(I0)',advance="no") indices($r)
