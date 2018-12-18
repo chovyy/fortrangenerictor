@@ -115,7 +115,7 @@ class FortranGenerictorNamespace(object):
     def typesWithDimensions(self, excludeTypes = [], excludeRanks = []):
         twds = []
         for fortranType in self.types():
-            if fortranType not in excludeTypes: 
+            if fortranType.name not in excludeTypes: 
                 for rank in fortranType.ranks:
                     if rank not in excludeRanks: 
                         twds.append(FortranTypeWithDimension(fortranType, rank))
