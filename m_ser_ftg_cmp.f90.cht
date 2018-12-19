@@ -122,6 +122,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   INTEGER :: $indicesJoined, counter
   
+  
   mask = expected $cmpOprt actual
   counter = 1
   
@@ -203,6 +204,7 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
 #end for
 !=============================================================================
+!TODO NaN beruecksichtigen
 !=============================================================================
 
 #for $td in $typesWithDimensions
