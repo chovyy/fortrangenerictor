@@ -204,6 +204,7 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
 #end for
 !=============================================================================
+!TODO Ausgabe fuer Skalare
 !TODO NaN beruecksichtigen
 !=============================================================================
 
