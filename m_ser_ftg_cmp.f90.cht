@@ -66,6 +66,7 @@ END INTERFACE ftg_compare
 
 REAL :: ftg_cmp_default_tolerance = 0.0
 INTEGER :: ftg_cmp_max_print_deviations = 10
+LOGICAL :: ftg_cmp_print_when_equal = .FALSE.
 CHARACTER(len=64) :: ftg_cmp_message_prefix = 'FTG Compare ***'
 
 CONTAINS
@@ -289,8 +290,12 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   END IF
   #end if
   
-  IF (PRESENT(failure_count)) THEN
-    IF (.NOT. result) THEN
+  IF (result) THEN
+    IF (ftg_cmp_print_when_equal) THEN
+      WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : OK"
+    END IF
+  ELSE
+    IF (PRESENT(failure_count)) THEN
       failure_count = failure_count + 1
     END IF
   END IF
