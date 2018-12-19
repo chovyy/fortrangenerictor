@@ -651,11 +651,10 @@ END SUBROUTINE ftg_read_${td.name}_${td.rank}d
 SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), POINTER :: field${td.dimensions}
-
   #if $td.rank > 0
   INTEGER, DIMENSION(8) :: bounds
   #end if
-
+  
   NULLIFY(field)
   IF (ftg_field_exists(fieldname)) THEN
     #if $td.rank > 0
@@ -674,7 +673,6 @@ END SUBROUTINE ftg_allocate_pointer_${td.name}_${td.rank}d
 SUBROUTINE ftg_allocate_allocatable_${td.name}_${td.rank}d(fieldname, field)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(OUT), ALLOCATABLE :: field${td.dimensions}
-
   #if $td.rank > 0
   INTEGER, DIMENSION(8) :: bounds
   #end if
