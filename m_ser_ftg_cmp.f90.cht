@@ -52,7 +52,7 @@ CHARACTER(LEN=*), PARAMETER :: module_name = 'm_ser_ftg_cmp'
 
 INTERFACE ftg_cmp_print_deviations
   MODULE PROCEDURE &
-  #for $td in $typesWithDimensions(excludeRanks = [0])
+  #for $td in $typesWithDimensions
     ftg_cmp_print_deviations_${td.name}_${td.rank}d${td.unlessIsLast(', &')}
   #end for   
 END INTERFACE ftg_cmp_print_deviations
@@ -107,6 +107,27 @@ END FUNCTION ftg_cmp_size
 !TODO UBOUND und LBOUND uebergeben und Indizes justieren
 !=============================================================================
 
+#for $t in $types
+  #if $t.name == 'logical' or $t.name == 'bool'
+    #set $cmpOprt = '.NEQV.'
+  #else
+    #set $cmpOprt = '/='
+  #end if
+  #set $contentFmt = {'logical':'L0', 'bool':'L0', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$t.name]
+SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d(expected, actual, fieldname_print)
+  ${t.datatype}, INTENT(IN) :: expected, actual
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
+  
+  IF (expected $cmpOprt actual) THEN
+    WRITE (*,'(A)',advance="no") "  -> expected: "
+    WRITE (*,'(L0)',advance="no") expected
+    WRITE (*,'(A)',advance="no") ", actual: "
+    WRITE (*,'($contentFmt)') actual
+  END IF
+
+END SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d
+
+#end for
 #for $td in $typesWithDimensions(excludeTypes = ['int', 'long', 'float', 'double'], excludeRanks = [0])
   #if $td.name == 'logical' or $td.name == 'bool'
     #set $cmpOprt = '.NEQV.'
@@ -121,7 +142,6 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   INTEGER :: $indicesJoined, counter
-  
   
   mask = expected $cmpOprt actual
   counter = 1
@@ -250,6 +270,10 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
   CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
   IF ($cmp) THEN
     result = .FALSE.
+    WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
+    IF (ftg_cmp_max_print_deviations > 0) THEN
+      CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
+    END IF 
   END IF
   #else 
   IF (.NOT. ftg_cmp_size(fieldname, SHAPE(field), fieldname_print)) THEN
@@ -258,8 +282,8 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
     IF (ANY($cmp)) THEN
       result = .FALSE.
+      WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
       IF (ftg_cmp_max_print_deviations > 0) THEN
-        WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
         CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
       END IF 
     END IF
