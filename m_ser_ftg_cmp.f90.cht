@@ -239,11 +239,11 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
     #set $cmp = 'field /= stored_field'
     #set $tol = ''
   #end if
-SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_acc$tol, fieldname_alias)
+SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_count$tol, fieldname_alias)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
   LOGICAL, INTENT(OUT) :: result
-  LOGICAL, INTENT(INOUT), OPTIONAL :: result_acc
+  INTEGER, INTENT(INOUT), OPTIONAL :: failure_count
   CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: fieldname_alias
   CHARACTER(LEN=256) :: fieldname_print
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
@@ -290,8 +290,10 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, result_a
   END IF
   #end if
   
-  IF (PRESENT(result_acc)) THEN
-    result_acc = result_acc .AND. result
+  IF (PRESENT(failure_count)) THEN
+    IF (.NOT. result) THEN
+      failure_count = failure_count + 1
+    END IF
   END IF
     
 END SUBROUTINE ftg_compare_${td.name}_${td.rank}d
