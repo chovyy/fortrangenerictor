@@ -233,21 +233,27 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
 #end for
 #for $td in $typesWithDimensions(excludeTypes = ['logical', 'bool'], excludeRanks = [0])
-  #if $t.name == 'float' or $t.name == 'double'
-    #set $cmp = '.NOT. (actual /= actual .AND. expected /= expected) .AND. actual /= expected'
+  #if $td.name == 'float' or $td.name == 'double'
+    #set $cmp = '.NOT. (actual /= actual .AND. expected /= expected) .AND. ABS(actual - expected) > t'
+    #set $tol = ', t'
   #else
     #set $cmp = 'actual /= expected'
+    #set $tol = ''
   #end if
   #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
   #set $contentFmt = {'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$td.name]
-SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print, lbounds)
+SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print, lbounds$tol)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   INTEGER, INTENT(IN), OPTIONAL :: lbounds($td.rank)
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
   INTEGER :: indices(${td.rank}), indexAdj(${td.rank}), i, j
+  #if $td.name == 'float' or $td.name == 'double'
+  REAL, INTENT(in) :: t
+  
+  #end if
   
   mask = $cmp
   deltas = ABS(expected - actual)
@@ -287,12 +293,15 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
   #if $td.name == 'float' or $td.name == 'double'
     #set $cmp = '.NOT. (field /= field .AND. stored_field /= stored_field) .AND. ABS(field - stored_field) > t'
     #set $tol = ', tolerance'
+    #set $t = ', t'
   #elif $td.name == 'logical' or $td.name == 'bool'
     #set $cmp = 'field .NEQV. stored_field'
     #set $tol = ''
+    #set $t = ''
   #else
     #set $cmp = 'field /= stored_field'
     #set $tol = ''
+    #set $t = ''
   #end if
   #if $td.rank > 0
     #set $bounds = ', lbounds, ubounds'
@@ -355,7 +364,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
       IF (.NOT. ftg_cmp_quiet) THEN
         WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
         IF (ftg_cmp_max_print_deviations > 0) THEN
-          CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print, lbounds)
+          CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print, lbounds$t)
         END IF 
       END IF
     END IF
