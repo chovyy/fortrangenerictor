@@ -249,8 +249,8 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   CHARACTER(LEN=256) :: fieldname_print
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
   #if $td.name == 'float' or $td.name == 'double'
-  ${td.datatype}, INTENT(in), OPTIONAL :: tolerance
-  ${td.datatype} :: t
+  REAL, INTENT(in), OPTIONAL :: tolerance
+  REAL :: t
   
   IF (PRESENT(tolerance)) THEN
     t = tolerance
