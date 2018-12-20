@@ -175,14 +175,20 @@ END SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d
   #set $indices = ['i', 'j', 'k', 'l'][:$td.rank]
   #set $indicesJoined = ', '.join($indices)
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
-SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
+SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print, lbounds)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
+  INTEGER, INTENT(IN), OPTIONAL :: lbounds($td.rank)
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
-  INTEGER :: $indicesJoined, counter
+  INTEGER :: indexAdj($td.rank), $indicesJoined, counter
   
   mask = expected .NEQV. actual
   counter = 1
+  IF (PRESENT(lbounds)) THEN
+    indexAdj = lbounds
+  ELSE
+    indexAdj(:) = 1
+  END IF
   
   outer: DO i = 1, SIZE(mask, 1)
     #if $td.rank > 1
@@ -196,11 +202,12 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
         #end if
           IF (mask($indicesJoined)) THEN
             WRITE (*,'(A)',advance="no") "  -> ("
-            #for $index in $indices
+            #for $r, $index in enumerate($indices)
+            #set $rank = $r + 1
             #if $index != 'i'
             WRITE (*,'(A)',advance="no") ", "
             #end if
-            WRITE (*,'(I0)',advance="no") $index
+            WRITE (*,'(I0)',advance="no") $index + indexAdj($rank) - 1
             #end for
             WRITE (*,'(A)',advance="no") "), expected: "
             WRITE (*,'(L0)',advance="no") expected($indicesJoined)
@@ -234,24 +241,30 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
   #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
   #set $contentFmt = {'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$td.name]
-SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print)
+SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print, lbounds)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
+  INTEGER, INTENT(IN), OPTIONAL :: lbounds($td.rank)
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
-  INTEGER :: indices(${td.rank}), i, j
+  INTEGER :: indices(${td.rank}), printIndices(${td.rank}), i, j
   
   mask = $cmp
   deltas = ABS(expected - actual)
   DO i = 1, ftg_cmp_max_print_deviations
     IF (ANY(mask)) THEN
       indices = MAXLOC(deltas, mask)
+      IF (PRESENT(lbounds)) THEN
+        printIndices(:) = indices(:) + lbounds(:) - 1
+      ELSE
+        printIndices = indices
+      END IF
       WRITE (*,'(A)',advance="no") "  -> ("
       #for $r in range(1, $td.rank + 1)
       #if $r > 1
       WRITE (*,'(A)',advance="no") ", "
       #end if
-      WRITE (*,'(I0)',advance="no") indices($r)
+      WRITE (*,'(I0)',advance="no") printIndices($r)
       #end for
       WRITE (*,'(A)',advance="no") "), expected: "
       WRITE (*,'($contentFmt)',advance="no") expected($indices)
@@ -338,7 +351,7 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
       result = .FALSE.
       WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
       IF (ftg_cmp_max_print_deviations > 0) THEN
-        CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
+        CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print, lbounds)
       END IF 
     END IF
   END IF
