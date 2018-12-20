@@ -67,6 +67,7 @@ END INTERFACE ftg_compare
 REAL :: ftg_cmp_default_tolerance = 0.0
 INTEGER :: ftg_cmp_max_print_deviations = 10
 LOGICAL :: ftg_cmp_print_when_equal = .FALSE.
+LOGICAL :: ftg_cmp_count_different_bounds_as_failure = .FALSE.
 CHARACTER(len=64) :: ftg_cmp_message_prefix = 'FTG Compare ***'
 
 CONTAINS
@@ -78,31 +79,70 @@ FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
 
   CHARACTER(LEN=*), INTENT(IN) :: fieldname, fieldname_print
   INTEGER, INTENT(IN) :: actual_shape(:)
-  INTEGER :: rank, expected_shape(4), i
+  INTEGER :: rank, expected_shape(4), r
   LOGICAL :: ftg_cmp_size
   
   rank = SIZE(actual_shape)
   expected_shape = ftg_get_size(fieldname)
   ftg_cmp_size =  ALL(actual_shape == expected_shape(:rank))
+  
   IF (.NOT. ftg_cmp_size) THEN
     WRITE (*,'(A,A,A,A)',advance="no") TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Size doesn't match, expected: ("
-    DO i = 1, rank
-      IF (i > 1) THEN
+    DO r = 1, rank
+      IF (r > 1) THEN
         WRITE(*,'(A)',advance="no") ', '
       END IF
-      WRITE (*,'(I0)',advance="no") expected_shape(i)
+      WRITE (*,'(I0)',advance="no") expected_shape(r)
     END DO
     WRITE (*,'(A)',advance="no") "), actual: ("
-    DO i = 1, rank
-      IF (i > 1) THEN
+    DO r = 1, rank
+      IF (r > 1) THEN
         WRITE(*,'(A)',advance="no") ', '
       END IF
-      WRITE (*,'(I0)',advance="no") actual_shape(i)
+      WRITE (*,'(I0)',advance="no") actual_shape(r)
     END DO
     WRITE (*,'(A)') ")"
   END IF
 
 END FUNCTION ftg_cmp_size
+
+FUNCTION ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print)
+
+  CHARACTER(LEN=*), INTENT(IN) :: fieldname, fieldname_print
+  INTEGER, INTENT(IN) :: lbounds(:), ubounds(:)
+  INTEGER :: rank, expected_bounds(2, 4), r
+  LOGICAL :: ftg_cmp_bounds
+  
+  rank = SIZE(lbounds)
+  expected_bounds = RESHAPE(ftg_get_bounds(fieldname), (/2, 4/))
+  
+  ftg_cmp_bounds = .TRUE.
+  DO r = 1, rank
+    IF (lbounds(r) /= expected_bounds(1,r) .OR. ubounds(r) /= expected_bounds(2,r)) THEN
+      ftg_cmp_bounds = .FALSE.
+      EXIT
+    END IF
+  END DO
+  
+  IF (.NOT. ftg_cmp_bounds) THEN
+    WRITE (*,'(A,A,A,A)',advance="no") TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Bounds doesn't match, expected: ("
+!    DO r = 1, rank
+!      IF (r > 1) THEN
+!        WRITE(*,'(A)',advance="no") ', '
+!      END IF
+!      WRITE (*,'(I0)',advance="no") expected_shape(r)
+!    END DO
+!    WRITE (*,'(A)',advance="no") "), actual: ("
+!    DO r = 1, rank
+!      IF (r > 1) THEN
+!        WRITE(*,'(A)',advance="no") ', '
+!      END IF
+!      WRITE (*,'(I0)',advance="no") actual_shape(r)
+!    END DO
+!    WRITE (*,'(A)') ")"
+  END IF
+
+END FUNCTION ftg_cmp_bounds
 
 !=============================================================================
 !TODO UBOUND und LBOUND uebergeben und Indizes justieren
@@ -240,7 +280,12 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
     #set $cmp = 'field /= stored_field'
     #set $tol = ''
   #end if
-SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_count$tol, fieldname_alias)
+  #if $td.rank > 0
+    #set $bounds = ', lbounds, ubounds'
+  #else
+    #set $bounds = ''
+  #end if
+SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_count$bounds$tol, fieldname_alias)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
   LOGICAL, INTENT(OUT) :: result
@@ -248,6 +293,9 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: fieldname_alias
   CHARACTER(LEN=256) :: fieldname_print
   ${td.datatype}, ALLOCATABLE :: stored_field${td.dimensions}
+  #if $td.rank > 0
+  INTEGER, INTENT(IN), OPTIONAL :: lbounds($td.rank), ubounds($td.rank)
+  #end if
   #if $td.name == 'float' or $td.name == 'double'
   REAL, INTENT(in), OPTIONAL :: tolerance
   REAL :: t
@@ -280,6 +328,11 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   IF (.NOT. ftg_cmp_size(fieldname, SHAPE(field), fieldname_print)) THEN
     result = .FALSE.
   ELSE
+    IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+      IF (.NOT. ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print) .AND. ftg_cmp_count_different_bounds_as_failure) THEN
+        result = .FALSE.
+      END IF
+    END IF
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
     IF (ANY($cmp)) THEN
       result = .FALSE.
