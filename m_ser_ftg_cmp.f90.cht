@@ -88,7 +88,8 @@ FUNCTION ftg_cmp_size(fieldname, actual_shape, fieldname_print)
   ftg_cmp_size =  ALL(actual_shape == expected_shape(:rank))
   
   IF (.NOT. ftg_cmp_size) THEN
-    WRITE (*,'(A,A,A,A)',advance="no") TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Size doesn't match, expected: ("
+    WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Size doesn't match"
+    WRITE (*,'(A)',advance="no") "  -> expected: ("
     DO r = 1, rank
       IF (r > 1) THEN
         WRITE(*,'(A)',advance="no") ', '
@@ -126,7 +127,8 @@ FUNCTION ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print)
   END DO
   
   IF (.NOT. ftg_cmp_bounds) THEN
-    WRITE (*,'(A,A,A,A)',advance="no") TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Bounds doesn't match, expected: ("
+    WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Bounds don't match"
+    WRITE (*,'(A)',advance="no") "  -> expected: ("
 !    DO r = 1, rank
 !      IF (r > 1) THEN
 !        WRITE(*,'(A)',advance="no") ', '
@@ -140,7 +142,7 @@ FUNCTION ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print)
 !      END IF
 !      WRITE (*,'(I0)',advance="no") actual_shape(r)
 !    END DO
-!    WRITE (*,'(A)') ")"
+    WRITE (*,'(A)') ")"
   END IF
 
 END FUNCTION ftg_cmp_bounds
