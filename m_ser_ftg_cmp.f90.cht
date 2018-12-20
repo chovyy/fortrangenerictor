@@ -247,24 +247,25 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   INTEGER, INTENT(IN), OPTIONAL :: lbounds($td.rank)
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
-  INTEGER :: indices(${td.rank}), printIndices(${td.rank}), i, j
+  INTEGER :: indices(${td.rank}), indexAdj(${td.rank}), i, j
   
   mask = $cmp
   deltas = ABS(expected - actual)
+  IF (PRESENT(lbounds)) THEN
+    indexAdj = lbounds
+  ELSE
+    indexAdj(:) = 1
+  END IF
+  
   DO i = 1, ftg_cmp_max_print_deviations
     IF (ANY(mask)) THEN
       indices = MAXLOC(deltas, mask)
-      IF (PRESENT(lbounds)) THEN
-        printIndices(:) = indices(:) + lbounds(:) - 1
-      ELSE
-        printIndices = indices
-      END IF
       WRITE (*,'(A)',advance="no") "  -> ("
       #for $r in range(1, $td.rank + 1)
       #if $r > 1
       WRITE (*,'(A)',advance="no") ", "
       #end if
-      WRITE (*,'(I0)',advance="no") printIndices($r)
+      WRITE (*,'(I0)',advance="no") indices($r) + indexAdj($r) - 1
       #end for
       WRITE (*,'(A)',advance="no") "), expected: "
       WRITE (*,'($contentFmt)',advance="no") expected($indices)
