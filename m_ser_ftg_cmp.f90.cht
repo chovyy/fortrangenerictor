@@ -202,7 +202,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   INTEGER :: indices(${td.rank}), i, j
   
   mask = $cmp
-  deltas = expected - actual
+  deltas = ABS(expected - actual)
   DO i = 1, ftg_cmp_max_print_deviations
     IF (ANY(mask)) THEN
       indices = MAXLOC(deltas, mask)
