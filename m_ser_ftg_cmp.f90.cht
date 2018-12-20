@@ -145,7 +145,6 @@ FUNCTION ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print)
 END FUNCTION ftg_cmp_bounds
 
 !=============================================================================
-!TODO UBOUND und LBOUND uebergeben und Indizes justieren
 !=============================================================================
 
 #for $t in $types
