@@ -5,7 +5,7 @@ Can generate generic Fortran subroutines
 ## To generate the [FortranTestGenerator](https://github.com/fortesg/fortrantestgenerator) front-end for [Serialbox2](https://github.com/eth-cscs/serialbox2) run:
 
 ```
-./FortranGenerictor.py m_ser_ftg.f90.cht > m_ser_ftg.f90
+./FortranGenerictor.py m_ser_ftg.f90.cht -o m_ser_ftg.f90
 ```
 
 ## Prerequisites 

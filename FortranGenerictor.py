@@ -14,9 +14,16 @@ def main():
     args = parseArguments(argParser);
     output = str(Template(file=args.file, searchList=[FortranGenerictorNamespace()]))
     output = alignColons(output)
-    print output
+
+    if args.outfile:   
+        f = open(args.outfile, 'w')
+        f.write(output)
+        f.close() 
+    else:
+        print output
     
 def parseArguments(argParser):
+    argParser.add_argument('-o', '--outfile', type=str, help='Where shall the output go. If not given, output goes to standard out');
     argParser.add_argument('file');
     return argParser.parse_args();    
     
