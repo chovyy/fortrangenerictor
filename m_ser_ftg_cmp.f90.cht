@@ -109,17 +109,19 @@ END FUNCTION ftg_cmp_size
 !=============================================================================
 
 #for $t in $types
-  #if $t.name == 'logical' or $t.name == 'bool'
-    #set $cmpOprt = '.NEQV.'
+  #if $t.name == 'float' or $t.name == 'double'
+    #set $cmp = '.NOT. (actual /= actual .AND. expected /= expected) .AND. actual /= expected'
+  #elif $t.name == 'logical' or $t.name == 'bool'
+    #set $cmp = 'actual .NEQV. expected'
   #else
-    #set $cmpOprt = '/='
+    #set $cmp = 'actual /= expected'
   #end if
   #set $contentFmt = {'logical':'L0', 'bool':'L0', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$t.name]
 SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d(expected, actual, fieldname_print)
   ${t.datatype}, INTENT(IN) :: expected, actual
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
   
-  IF (expected $cmpOprt actual) THEN
+  IF ($cmp) THEN
     WRITE (*,'(A)',advance="no") "  -> expected: "
     WRITE (*,'(L0)',advance="no") expected
     WRITE (*,'(A)',advance="no") ", actual: "
@@ -130,11 +132,6 @@ END SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d
 
 #end for
 #for $td in $typesWithDimensions(excludeTypes = ['int', 'long', 'float', 'double'], excludeRanks = [0])
-  #if $td.name == 'logical' or $td.name == 'bool'
-    #set $cmpOprt = '.NEQV.'
-  #else
-    #set $cmpOprt = '/='
-  #end if
   #set $indices = ['i', 'j', 'k', 'l'][:$td.rank]
   #set $indicesJoined = ', '.join($indices)
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
@@ -144,7 +141,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   LOGICAL, ALLOCATABLE :: mask${td.dimensions}
   INTEGER :: $indicesJoined, counter
   
-  mask = expected $cmpOprt actual
+  mask = expected .NEQV. actual
   counter = 1
   
   outer: DO i = 1, SIZE(mask, 1)
@@ -189,6 +186,11 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
 #end for
 #for $td in $typesWithDimensions(excludeTypes = ['logical', 'bool'], excludeRanks = [0])
+  #if $t.name == 'float' or $t.name == 'double'
+    #set $cmp = '.NOT. (actual /= actual .AND. expected /= expected) .AND. actual /= expected'
+  #else
+    #set $cmp = 'actual /= expected'
+  #end if
   #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
   #set $contentFmt = {'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$td.name]
@@ -199,7 +201,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   ${td.datatype}, ALLOCATABLE :: deltas${td.dimensions}
   INTEGER :: indices(${td.rank}), i, j
   
-  mask = expected /= actual
+  mask = $cmp
   deltas = expected - actual
   DO i = 1, ftg_cmp_max_print_deviations
     IF (ANY(mask)) THEN
@@ -225,12 +227,11 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
 
 #end for
 !=============================================================================
-!TODO NaN beruecksichtigen
 !=============================================================================
 
 #for $td in $typesWithDimensions
   #if $td.name == 'float' or $td.name == 'double'
-    #set $cmp = 'ABS(field - stored_field) > t'
+    #set $cmp = '.NOT. (field /= field .AND. stored_field /= stored_field) .AND. ABS(field - stored_field) > t'
     #set $tol = ', tolerance'
   #elif $td.name == 'logical' or $td.name == 'bool'
     #set $cmp = 'field .NEQV. stored_field'
