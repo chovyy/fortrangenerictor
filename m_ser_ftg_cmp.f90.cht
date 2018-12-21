@@ -45,7 +45,7 @@ USE m_ser_ftg
 IMPLICIT NONE
 
 PUBLIC :: ftg_cmp_default_tolerance, ftg_cmp_quiet, ftg_cmp_max_print_deviations, ftg_cmp_print_when_equal, &
-          ftg_cmp_count_different_bounds_as_failure, ftg_cmp_message_prefix, ftg_compare
+          ftg_cmp_count_different_bounds_as_failure, ftg_cmp_count_missing_field_as_failure, ftg_cmp_message_prefix, ftg_compare
 
 PRIVATE
 
@@ -70,6 +70,7 @@ LOGICAL :: ftg_cmp_quiet = .FALSE.
 INTEGER :: ftg_cmp_max_print_deviations = 10
 LOGICAL :: ftg_cmp_print_when_equal = .FALSE.
 LOGICAL :: ftg_cmp_count_different_bounds_as_failure = .FALSE.
+LOGICAL :: ftg_cmp_count_missing_field_as_failure = .TRUE.
 CHARACTER(len=64) :: ftg_cmp_message_prefix = 'FTG Compare ***'
 
 CONTAINS
@@ -337,39 +338,48 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   END IF
   
   result = .TRUE.
-
-  #if $td.rank == 0
-  CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-  IF ($cmp) THEN
-    result = .FALSE.
+  
+  IF (.NOT. ftg_field_exists(fieldname)) THEN
+    IF (ftg_cmp_count_missing_field_as_failure) THEN
+      result = .FALSE.
+    END IF
     IF (.NOT. ftg_cmp_quiet) THEN
-      WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
-      IF (ftg_cmp_max_print_deviations > 0) THEN
-        CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
-      END IF 
+      WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Don't exist in Serializer"
     END IF
-  END IF
-  #else 
-  IF (.NOT. ftg_cmp_size(fieldname, SHAPE(field), fieldname_print)) THEN
-    result = .FALSE.
   ELSE
-    IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
-      IF (.NOT. ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print) .AND. ftg_cmp_count_different_bounds_as_failure) THEN
-        result = .FALSE.
-      END IF
-    END IF
+    #if $td.rank == 0
     CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
-    IF (ANY($cmp)) THEN
+    IF ($cmp) THEN
       result = .FALSE.
       IF (.NOT. ftg_cmp_quiet) THEN
         WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
         IF (ftg_cmp_max_print_deviations > 0) THEN
-          CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print, lbounds$t)
+          CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print)
         END IF 
       END IF
     END IF
+    #else 
+    IF (.NOT. ftg_cmp_size(fieldname, SHAPE(field), fieldname_print)) THEN
+      result = .FALSE.
+    ELSE
+      IF (PRESENT(lbounds) .AND. PRESENT(ubounds)) THEN
+        IF (.NOT. ftg_cmp_bounds(fieldname, lbounds, ubounds, fieldname_print) .AND. ftg_cmp_count_different_bounds_as_failure) THEN
+          result = .FALSE.
+        END IF
+      END IF
+      CALL ftg_allocate_and_read_allocatable(fieldname, stored_field)
+      IF (ANY($cmp)) THEN
+        result = .FALSE.
+        IF (.NOT. ftg_cmp_quiet) THEN
+          WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : Not equal"
+          IF (ftg_cmp_max_print_deviations > 0) THEN
+            CALL ftg_cmp_print_deviations(stored_field, field, fieldname_print, lbounds$t)
+          END IF 
+        END IF
+      END IF
+    END IF
+    #end if
   END IF
-  #end if
   
   IF (result) THEN
     IF (.NOT. ftg_cmp_quiet .AND. ftg_cmp_print_when_equal) THEN
