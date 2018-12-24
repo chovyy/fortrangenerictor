@@ -164,7 +164,7 @@ SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d(expected, actual, fieldname_pri
   
   IF ($cmp) THEN
     WRITE (*,'(A)',advance="no") "  -> expected: "
-    WRITE (*,'(L0)',advance="no") expected
+    WRITE (*,'($contentFmt)',advance="no") expected
     WRITE (*,'(A)',advance="no") ", actual: "
     WRITE (*,'($contentFmt)') actual
   END IF
