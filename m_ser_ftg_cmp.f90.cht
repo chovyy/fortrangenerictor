@@ -157,7 +157,7 @@ END FUNCTION ftg_cmp_bounds
   #else
     #set $cmp = 'actual /= expected'
   #end if
-  #set $contentFmt = {'logical':'L0', 'bool':'L0', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$t.name]
+  #set $contentFmt = {'logical':'L1', 'bool':'L1', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$t.name]
 SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d(expected, actual, fieldname_print)
   ${t.datatype}, INTENT(IN) :: expected, actual
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
@@ -211,9 +211,9 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
             WRITE (*,'(I0)',advance="no") $index + indexAdj($rank) - 1
             #end for
             WRITE (*,'(A)',advance="no") "), expected: "
-            WRITE (*,'(L0)',advance="no") expected($indicesJoined)
+            WRITE (*,'(L1)',advance="no") expected($indicesJoined)
             WRITE (*,'(A)',advance="no") ", actual: "
-            WRITE (*,'(L0)') actual($indicesJoined)
+            WRITE (*,'(L1)') actual($indicesJoined)
             counter = counter + 1
             IF (counter > ftg_cmp_max_print_deviations) THEN
               EXIT outer
