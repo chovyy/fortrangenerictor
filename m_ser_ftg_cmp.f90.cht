@@ -7,6 +7,7 @@
 #silent $addType('double', 'REAL(KIND=C_DOUBLE)')
 #set $metainfoGetterTypes = [('b', 'LOGICAL'), ('i', 'INTEGER(KIND=C_INT)'),  ('l', 'INTEGER(KIND=C_LONG)'), ('f', 'REAL(KIND=C_FLOAT)'), ('d', 'REAL(KIND=C_DOUBLE)')]  
 #set $metainfoSetterTypes = $metainfoGetterTypes + [('s', 'CHARACTER(LEN=*)')]   
+#set $contentFmts = {'logical':'L1', 'bool':'L1', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}
 !------------------------------------------------------------*- Fortran -*-----
 !
 !                              S E R I A L B O X
@@ -157,7 +158,7 @@ END FUNCTION ftg_cmp_bounds
   #else
     #set $cmp = 'actual /= expected'
   #end if
-  #set $contentFmt = {'logical':'L1', 'bool':'L1', 'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$t.name]
+  #set $contentFmt = $contentFmts[$t.name]
 SUBROUTINE ftg_cmp_print_deviations_${t.name}_0d(expected, actual, fieldname_print)
   ${t.datatype}, INTENT(IN) :: expected, actual
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
@@ -243,7 +244,7 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
   #end if
   #set $indices = ', '.join(['indices(' + str(r) + ')' for r in range(1, $td.rank + 1)])
   #set $indicesFmt = ','.join(['IO' for r in range(1, $td.rank + 1)])
-  #set $contentFmt = {'int':'I0', 'long':'I19', 'float':'F0.14', 'double':'F0.14'}[$td.name]
+  #set $contentFmt = $contentFmts[$td.name]
 SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fieldname_print, lbounds$tol)
   ${td.datatype}, INTENT(IN) :: expected${td.dimensions}, actual${td.dimensions}
   CHARACTER(LEN=*), INTENT(IN) :: fieldname_print
@@ -309,6 +310,7 @@ END SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d
   #else
     #set $bounds = ''
   #end if
+  #set $contentFmt = $contentFmts[$td.name]
 SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_count$bounds$tol, fieldname_alias)
   CHARACTER(LEN=*), INTENT(IN) :: fieldname
   ${td.datatype}, INTENT(IN) :: field${td.dimensions}
@@ -383,7 +385,11 @@ SUBROUTINE ftg_compare_${td.name}_${td.rank}d(fieldname, field, result, failure_
   
   IF (result) THEN
     IF (.NOT. ftg_cmp_quiet .AND. ftg_cmp_print_when_equal) THEN
+    #if $td.rank == 0
+      WRITE (*,'(A,A,A,A,$contentFmt,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : OK (", field, ")"
+    #else
       WRITE (*,'(A,A,A,A)') TRIM(ftg_cmp_message_prefix), " ", TRIM(fieldname_print), " : OK"
+    #end if  
     END IF
   ELSE
     IF (PRESENT(failure_count)) THEN
