@@ -258,6 +258,7 @@ SUBROUTINE ftg_cmp_print_deviations_${td.name}_${td.rank}d(expected, actual, fie
   #end if
   
   mask = $cmp
+  ALLOCATE(deltas, MOLD=expected)
   deltas = ABS(expected - actual)
   IF (PRESENT(lbounds)) THEN
     indexAdj = lbounds
